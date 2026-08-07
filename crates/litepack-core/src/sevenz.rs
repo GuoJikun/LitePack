@@ -346,6 +346,40 @@ mod tests {
     }
 
     #[test]
+    fn reject_traversal_entry() {
+        let root = temp("traversal");
+        let archive = root.join("evil.7z");
+        let f = File::create(&archive).unwrap();
+        let mut w = ArchiveWriter::new(f).unwrap();
+        w.set_content_methods(vec![EncoderConfiguration::new(EncoderMethod::COPY)]);
+        let entry = ArchiveEntry::new_file("../evil.txt");
+        w.push_archive_entry::<io::Empty>(entry, None).unwrap();
+        w.finish().unwrap();
+
+        let out = root.join("out");
+        let r = decompress(&archive, &out, &ExtractOptions::default(), &NoopSink, &CancelHandle::new());
+        assert!(matches!(r, Err(Error::PathTraversal(_))), "{r:?}");
+    }
+
+    #[test]
+    fn reject_too_many_entries() {
+        let root = temp("many");
+        let archive = root.join("many.7z");
+        let f = File::create(&archive).unwrap();
+        let mut w = ArchiveWriter::new(f).unwrap();
+        w.set_content_methods(vec![EncoderConfiguration::new(EncoderMethod::COPY)]);
+        for i in 0..=100_000 {
+            w.push_archive_entry::<io::Empty>(ArchiveEntry::new_file(&format!("f{i}")), None)
+                .unwrap();
+        }
+        w.finish().unwrap();
+
+        let out = root.join("out");
+        let r = decompress(&archive, &out, &ExtractOptions::default(), &NoopSink, &CancelHandle::new());
+        assert!(matches!(r, Err(Error::ZipBomb)), "{r:?}");
+    }
+
+    #[test]
     fn interop_with_system_7z() {
         let has_7z = std::process::Command::new("7z").arg("i").output().map(|o| o.status.success()).unwrap_or(false);
         if !has_7z {

@@ -332,6 +332,25 @@ mod tests {
     }
 
     #[test]
+    fn safe_join_rejects_absolute_and_drive() {
+        for evil in [
+            "/etc/passwd",
+            "C:\\windows\\system32\\evil.dll",
+            "C:/windows/evil.exe",
+            "a/../b",
+            "..\\..\\x",
+            "..",
+            "",
+        ] {
+            let r = safe_join(Path::new("out"), evil);
+            assert!(r.is_err(), "{evil:?} 应当被拒绝，实际 {r:?}");
+        }
+        // 正常路径必须放行。
+        assert!(safe_join(Path::new("out"), "a/b/c.txt").is_ok());
+        assert!(safe_join(Path::new("out"), "中文/名.txt").is_ok());
+    }
+
+    #[test]
     fn cancel_mid_operation() {
         let root = temp("cancel");
         let big = root.join("big.bin");
@@ -345,6 +364,78 @@ mod tests {
         let out = root.join("out");
         let r = decompress(&archive, &out, &ExtractOptions::default(), &NoopSink, &cancel);
         assert!(matches!(r, Err(Error::Cancelled)));
+    }
+
+    #[test]
+    fn reject_zip_bomb() {
+        let root = temp("bomb");
+        let archive = root.join("bomb.zip");
+        craft_zip_bomb(&archive, 100_000_000);
+        // 声称 100MiB 解压后内容，实际仅 4 字节存储数据，比例远超 10000。
+        let out = root.join("out");
+        let r = decompress(&archive, &out, &ExtractOptions::default(), &NoopSink, &CancelHandle::new());
+        assert!(matches!(r, Err(Error::ZipBomb)), "{r:?}");
+    }
+
+    /// 手工构造单条目 Stored ZIP，中央目录声称 `fake_size` 解压大小。
+    fn craft_zip_bomb(path: &Path, fake_size: u32) {
+        use std::io::Write;
+        let name = b"bomb.bin";
+        let data = b"\x00\x01\x02\x03";
+        let crc = 0x1234_5678u32;
+
+        let mut local = Vec::new();
+        local.extend_from_slice(&0x0403_4b50u32.to_le_bytes()); // 本地头签名
+        local.extend_from_slice(&20u16.to_le_bytes()); // version
+        local.extend_from_slice(&0u16.to_le_bytes()); // flags
+        local.extend_from_slice(&0u16.to_le_bytes()); // method = Stored
+        local.extend_from_slice(&0u16.to_le_bytes()); // time
+        local.extend_from_slice(&0x21u16.to_le_bytes()); // date
+        local.extend_from_slice(&crc.to_le_bytes());
+        local.extend_from_slice(&(data.len() as u32).to_le_bytes()); // csize
+        local.extend_from_slice(&fake_size.to_le_bytes()); // usize
+        local.extend_from_slice(&(name.len() as u16).to_le_bytes());
+        local.extend_from_slice(&0u16.to_le_bytes()); // extra len
+        local.extend_from_slice(name);
+        local.extend_from_slice(data);
+
+        let local_offset = 0u32;
+        let mut central = Vec::new();
+        central.extend_from_slice(&0x0201_4b50u32.to_le_bytes()); // 中央目录签名
+        central.extend_from_slice(&20u16.to_le_bytes()); // version made by
+        central.extend_from_slice(&20u16.to_le_bytes()); // version needed
+        central.extend_from_slice(&0u16.to_le_bytes()); // flags
+        central.extend_from_slice(&0u16.to_le_bytes()); // method
+        central.extend_from_slice(&0u16.to_le_bytes()); // time
+        central.extend_from_slice(&0x21u16.to_le_bytes()); // date
+        central.extend_from_slice(&crc.to_le_bytes());
+        central.extend_from_slice(&(data.len() as u32).to_le_bytes()); // csize
+        central.extend_from_slice(&fake_size.to_le_bytes()); // usize
+        central.extend_from_slice(&(name.len() as u16).to_le_bytes());
+        central.extend_from_slice(&0u16.to_le_bytes()); // extra len
+        central.extend_from_slice(&0u16.to_le_bytes()); // comment len
+        central.extend_from_slice(&0u16.to_le_bytes()); // disk start
+        central.extend_from_slice(&0u16.to_le_bytes()); // internal attrs
+        central.extend_from_slice(&0u32.to_le_bytes()); // external attrs
+        central.extend_from_slice(&local_offset.to_le_bytes());
+        central.extend_from_slice(name);
+
+        let mut eocd = Vec::new();
+        eocd.extend_from_slice(&0x0605_4b50u32.to_le_bytes()); // EOCD 签名
+        eocd.extend_from_slice(&0u16.to_le_bytes()); // disk num
+        eocd.extend_from_slice(&0u16.to_le_bytes()); // cd disk
+        eocd.extend_from_slice(&1u16.to_le_bytes()); // entries this disk
+        eocd.extend_from_slice(&1u16.to_le_bytes()); // total entries
+        eocd.extend_from_slice(&(central.len() as u32).to_le_bytes()); // cd size
+        eocd.extend_from_slice(&(local.len() as u32).to_le_bytes()); // cd offset
+        eocd.extend_from_slice(&0u16.to_le_bytes()); // comment len
+
+        let mut bytes = Vec::new();
+        bytes.extend_from_slice(&local);
+        bytes.extend_from_slice(&central);
+        bytes.extend_from_slice(&eocd);
+        let mut f = File::create(path).unwrap();
+        f.write_all(&bytes).unwrap();
     }
 
     #[test]

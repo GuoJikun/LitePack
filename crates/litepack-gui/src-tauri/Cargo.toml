@@ -12,14 +12,14 @@ name = "litepack_gui_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2.6.3" }
+tauri-build = { version = "2.6.3", features = [] }
 
 [dependencies]
 litepack-core = { path = "../../litepack-core" }
 serde_json.workspace = true
 serde.workspace = true
 thiserror.workspace = true
-tauri = { version = "2.11.5" }
+tauri = { version = "2.11.5", features = [] }
 tauri-plugin-dialog = "2.7.2"
 tauri-plugin-fs = "2.5.1"
 parking_lot.workspace = true

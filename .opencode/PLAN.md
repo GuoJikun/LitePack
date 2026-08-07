@@ -186,7 +186,7 @@ async fn cancel_operation(id: u64) -> Result<(), String>
 - [x] **M3 CLI**：pack/unpack/list + 进度条 + 取消 + 退出码
 - [x] **M4 Tauri 工程**：用 `tauri-cli` 初始化（见第 11 节流程）
 - [x] **M5 前端**：三视图 + 拖拽 + 进度/取消 + 主题系统（亮/暗）；验证 TS 6 + vue-tsc 3.3.9 + Vite 8 兼容性
-- [ ] **M6 硬化**：安全用例、错误处理打磨、`clippy -- -D warnings`
+- [x] **M6 硬化**：安全用例、错误处理打磨、`clippy -- -D warnings`
 - [ ] **M7 发布**：LICENSE/THIRD_PARTY_NOTICES、NSIS 打包、CI 三平台
 
 ## 11. Tauri 工程初始化流程（M4）
