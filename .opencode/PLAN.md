@@ -145,14 +145,14 @@ async fn cancel_operation(id: u64) -> Result<(), String>
 - 文件对话框：`tauri-plugin-dialog`；拖拽：`onDragDropEvent`
 - `tauri.conf.json`：`identifier: com.litepack.app`、`frontendDist: ../dist`、`beforeDevCommand: pnpm dev`、`bundle.targets: ["nsis"]`（Windows）
 
-## 6. Vue3 前端
+## 6. Vue3 前端（按设计图 v2：归档浏览器）
 
-- 顶部 Tab：「压缩 / 解压 / 列表」，pinia 管理全局任务状态
-- 压缩页：`FileDropZone`（多选文件+目录）→ `OptionBar`（格式 ZIP/7z、级别 1-9、密码）→ 输出路径 → 开始
-- 解压页：选归档 + 目标目录 → 开始；支持拖拽归档
-- 列表页：`list_archive` 表格展示（路径/大小/压缩大小/方法/CRC）
-- ProgressOverlay：监听 Channel `onmessage` 更新进度 + 取消按钮
-- 主题：CSS 变量设计系统 `theme/variables.css`，`[data-theme="dark"|"light"]` 切换并持久化 localStorage；初始提供亮/暗两套
+- 界面参考 `litepack-design-v2.html`：自定义标题栏（无边框 `decorations:false` + 拖拽/最小化/最大化/关闭）、工具栏（解压到/一键解压/搜索/主题）、文件表格（名称/压缩前/压缩后/类型/修改日期，排序+选择）、面包屑导航、状态栏（大小/数量/压缩率/格式）、底部进度条
+- 打开归档：空态拖拽或对话框 → `list_archive` → 前端按路径构造目录树，进入目录导航
+- 解压：`extract_archive` 到所选目录；加密归档弹出密码对话框（Encrypted/BadPassword 事件触发重试）
+- pinia 管理状态：archive/entries/currentDir/search/selected/task
+- 主题：CSS 变量设计系统 `theme/variables.css`，`[data-theme]` 切换并持久化 localStorage
+- 待办（后续里程碑）：压缩界面（新建归档）、往归档添加条目、从归档删除条目
 
 ## 7. 安全设计
 

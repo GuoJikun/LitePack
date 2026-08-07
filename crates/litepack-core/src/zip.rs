@@ -25,12 +25,14 @@ pub fn list(archive: &Path) -> Result<Vec<EntryInfo>> {
     let mut out = Vec::with_capacity(z.len());
     for i in 0..z.len() {
         let e = z.by_index_raw(i)?;
+        let modified = e.last_modified().and_then(msdos_to_unix);
         out.push(EntryInfo {
             path: e.name().to_string(),
             size: e.size(),
             is_dir: e.is_dir(),
             compressed_size: Some(e.compressed_size()),
             method: Some(e.compression().to_string()),
+            modified,
         });
     }
     Ok(out)
@@ -229,6 +231,31 @@ fn map_copy_error(e: &io::Error, encrypted: bool) -> Error {
     }
 }
 
+/// 将 DOS 日期时间转 Unix 秒（无 timezone，仅作展示用）。
+fn msdos_to_unix(dt: zip::DateTime) -> Option<u64> {
+    let y = i64::from(dt.year());
+    let m = i64::from(dt.month());
+    let d = i64::from(dt.day());
+    let hh = i64::from(dt.hour());
+    let mm = i64::from(dt.minute());
+    let ss = i64::from(dt.second());
+    if !(1..=12).contains(&m) || !(1..=31).contains(&d) {
+        return None;
+    }
+    // Howard Hinnant 的 civil-from-days 算法（公历）。
+    let y2 = if m <= 2 { y - 1 } else { y };
+    let era = if y2 >= 0 { y2 } else { y2 - 399 } / 400;
+    let yoe = y2 - era * 400;
+    let mp = (m + 9) % 12;
+    let doy = (153 * mp + 2) / 5 + d - 1;
+    let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+    let days = era * 146_097 + doe - 719_468;
+    Some(
+        days.checked_mul(86_400)?
+            .checked_add(hh.checked_mul(3_600)? + mm.checked_mul(60)? + ss)? as u64,
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -272,6 +299,11 @@ mod tests {
         assert!(names.contains(&"data/a.txt"));
         assert!(names.contains(&"data/sub/b.txt"));
         assert!(names.contains(&"data/empty_dir/"));
+        for info in &listed {
+            if info.path == "data/a.txt" {
+                assert!(info.modified.is_some(), "应记录修改时间");
+            }
+        }
 
         let out = root.join("extracted");
         decompress(&archive, &out, &ExtractOptions::default(), &NoopSink, &CancelHandle::new()).unwrap();

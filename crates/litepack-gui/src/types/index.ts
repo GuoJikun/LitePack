@@ -7,6 +7,7 @@ export interface EntryInfo {
   is_dir: boolean;
   compressed_size: number | null;
   method: string | null;
+  modified: number | null;
 }
 
 export interface ProgressReport {

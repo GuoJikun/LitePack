@@ -37,6 +37,14 @@ pub fn list(archive: &Path) -> Result<Vec<EntryInfo>> {
             is_dir: f.is_directory,
             compressed_size: (f.compressed_size > 0).then_some(f.compressed_size),
             method: None,
+            modified: if f.has_last_modified_date {
+                std::time::SystemTime::from(f.last_modified_date)
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .ok()
+                    .map(|d| d.as_secs())
+            } else {
+                None
+            },
         })
         .collect())
 }

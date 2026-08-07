@@ -10,4 +10,6 @@ pub struct EntryInfo {
     pub is_dir: bool,
     pub compressed_size: Option<u64>,
     pub method: Option<String>,
+    /// 修改时间（Unix 秒）；归档未记录时为 None。
+    pub modified: Option<u64>,
 }

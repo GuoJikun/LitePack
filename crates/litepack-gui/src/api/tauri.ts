@@ -33,7 +33,7 @@ export function compressFiles(req: CompressRequest): Promise<number> {
 
 export interface ExtractRequest {
   archive: string;
-  target: string;
+  outDir: string;
   password?: string;
   overwrite: boolean;
   progress: Channel<ChannelEvent>;
@@ -42,7 +42,7 @@ export interface ExtractRequest {
 export function extractArchive(req: ExtractRequest): Promise<number> {
   return invoke("extract_archive", {
     archive: req.archive,
-    target: req.target,
+    out_dir: req.outDir,
     password: req.password,
     overwrite: req.overwrite,
     progress: req.progress,
