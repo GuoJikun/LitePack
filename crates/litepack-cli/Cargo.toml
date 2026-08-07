@@ -1,0 +1,17 @@
+[package]
+name = "litepack-cli"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+description = "LitePack 命令行工具（ZIP / 7z）"
+
+[[bin]]
+name = "litepack"
+path = "src/main.rs"
+
+[dependencies]
+litepack-core = { path = "../litepack-core" }
+anyhow.workspace = true
+clap.workspace = true
+indicatif.workspace = true
+ctrlc = "3.4"
