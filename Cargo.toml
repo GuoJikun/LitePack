@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "crates/litepack-core",
     "crates/litepack-cli",
+    "crates/litepack-gui/src-tauri",
 ]
 
 [workspace.package]

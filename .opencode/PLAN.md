@@ -184,7 +184,7 @@ async fn cancel_operation(id: u64) -> Result<(), String>
 - [x] **M1 ZIP**：`zip.rs` 压缩/解压/list + round-trip 测试
 - [x] **M2 7z**：`sevenz.rs` 压缩/解压/list + 互操作测试
 - [x] **M3 CLI**：pack/unpack/list + 进度条 + 取消 + 退出码
-- [ ] **M4 Tauri 工程**：用 `tauri-cli` 初始化（见第 11 节流程）
+- [x] **M4 Tauri 工程**：用 `tauri-cli` 初始化（见第 11 节流程）
 - [ ] **M5 前端**：三视图 + 拖拽 + 进度/取消 + 主题系统（亮/暗）；验证 TS 6 + vue-tsc 3.3.9 + Vite 8 兼容性
 - [ ] **M6 硬化**：安全用例、错误处理打磨、`clippy -- -D warnings`
 - [ ] **M7 发布**：LICENSE/THIRD_PARTY_NOTICES、NSIS 打包、CI 三平台
