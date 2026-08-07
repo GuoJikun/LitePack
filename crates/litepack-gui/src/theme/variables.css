@@ -1,0 +1,30 @@
+:root {
+  --bg: #f5f6f8;
+  --bg-elevated: #ffffff;
+  --bg-hover: #eef1f5;
+  --text: #1a1d21;
+  --text-secondary: #6b7280;
+  --border: #e2e5ea;
+  --accent: #2f6fed;
+  --accent-hover: #265fce;
+  --accent-soft: rgba(47, 111, 237, 0.12);
+  --danger: #e5484d;
+  --success: #2f9e68;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --radius: 8px;
+}
+
+[data-theme="dark"] {
+  --bg: #14171a;
+  --bg-elevated: #1e2227;
+  --bg-hover: #262b31;
+  --text: #e8eaed;
+  --text-secondary: #9aa3ad;
+  --border: #2c3238;
+  --accent: #4c8dff;
+  --accent-hover: #6ba0ff;
+  --accent-soft: rgba(76, 141, 255, 0.16);
+  --danger: #ff6b70;
+  --success: #4cc38a;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
