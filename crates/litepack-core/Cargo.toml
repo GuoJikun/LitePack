@@ -1,0 +1,16 @@
+[package]
+name = "litepack-core"
+version = "0.1.0"
+edition = "2021"
+license.workspace = true
+description = "LitePack 纯 Rust 压缩/解压核心库（ZIP / 7z）"
+
+[dependencies]
+thiserror.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+walkdir.workspace = true
+zip.workspace = true
+sevenz-rust2.workspace = true
+rayon.workspace = true
+parking_lot.workspace = true
