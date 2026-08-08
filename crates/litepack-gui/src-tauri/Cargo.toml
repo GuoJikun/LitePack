@@ -22,7 +22,11 @@ thiserror.workspace = true
 tauri = { version = "2.11.5", features = [] }
 tauri-plugin-dialog = "2.7.2"
 tauri-plugin-fs = "2.5.1"
+tauri-plugin-log.workspace = true
+log.workspace = true
 parking_lot.workspace = true
+path-slash.workspace = true
+urlencoding.workspace = true
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.55.0"

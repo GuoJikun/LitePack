@@ -1,4 +1,10 @@
-//! Windows 资源管理器右键菜单「直接解压」注册（仅 Windows，其余平台为 no-op）。
+//! Windows 资源管理器右键菜单注册（仅 Windows，其余平台为 no-op）。
+//!
+//! 注册四种动词：
+//! - LitePackOpen → 打开/浏览归档
+//! - LitePackExtractHere → 解压到当前文件夹
+//! - LitePackExtractTo → 解压到...（弹出对话框）
+//! - LitePackExtractNamed → 解压到同名目录
 
 #[cfg(windows)]
 mod imp {
@@ -12,18 +18,24 @@ mod imp {
     use winreg::RegKey;
 
     const SHELL_KEY: &str = r"Software\Classes";
-    const VERB_NAME: &str = "LitePackExtractHere";
-    const VERB_DISPLAY: &str = "直接解压(&X)";
     const EXTS: [&str; 2] = [".zip", ".7z"];
 
-    fn verb_path(progid: &str) -> String {
-        format!(r"{SHELL_KEY}\{progid}\shell\{VERB_NAME}")
+    /// 右键菜单动词定义：(名称, 显示文本, 启动参数标志)
+    const VERBS: [(&str, &str, &str); 4] = [
+        ("LitePackOpen", "用 LitePack 打开(&O)", "--open"),
+        ("LitePackExtractHere", "解压到当前文件夹(&X)", "--extract-here"),
+        ("LitePackExtractTo", "解压到...(&E)...", "--extract-to"),
+        ("LitePackExtractNamed", "解压到同名目录(&N)", "--extract-named"),
+    ];
+
+    fn verb_path(progid: &str, verb_name: &str) -> String {
+        format!("{SHELL_KEY}\\{progid}\\shell\\{verb_name}")
     }
 
     /// 解析扩展名的实际 ProgID（通过 HKCR 合并视图读取，HKCU 优先于 HKLM）。
     /// 扩展名键默认值为空或不存在时，直接以扩展名自身作为 ProgID。
     fn resolve_progid(ext: &str) -> String {
-        let key = match RegKey::predef(HKEY_CLASSES_ROOT).open_subkey(format!(r"{SHELL_KEY}\{ext}")) {
+        let key = match RegKey::predef(HKEY_CLASSES_ROOT).open_subkey(format!("{SHELL_KEY}\\{ext}")) {
             Ok(k) => k,
             Err(_) => return ext.to_string(),
         };
@@ -35,18 +47,38 @@ mod imp {
 
     /// SystemFileAssociations 路径：与默认程序无关，始终随扩展名生效，
     /// 也是 Win11 下最可靠的注册位置。
-    fn sfa_path(ext: &str) -> String {
-        format!(r"{SHELL_KEY}\SystemFileAssociations\{ext}\shell\{VERB_NAME}")
+    fn sfa_path(ext: &str, verb_name: &str) -> String {
+        format!("{SHELL_KEY}\\SystemFileAssociations\\{ext}\\shell\\{verb_name}")
     }
 
-    /// 注册动词的目标路径（去重）：
-    /// - SystemFileAssociations\.ext（首选，稳定）
-    /// - 扩展名自身
-    /// - 解析出的 ProgID
-    pub fn target_paths() -> Vec<String> {
+    /// 所有需要注册的路径（去重）。
+    pub fn all_target_paths() -> Vec<String> {
         let mut paths: Vec<String> = Vec::new();
         for ext in EXTS {
-            for p in [sfa_path(ext), verb_path(ext), verb_path(&resolve_progid(ext))] {
+            for (verb_name, _, _) in VERBS {
+                for p in [
+                    sfa_path(ext, verb_name),
+                    verb_path(ext, verb_name),
+                    verb_path(&resolve_progid(ext), verb_name),
+                ] {
+                    if !paths.contains(&p) {
+                        paths.push(p);
+                    }
+                }
+            }
+        }
+        paths
+    }
+
+    /// 某个动词需要注册的路径。
+    fn verb_target_paths(verb_name: &str) -> Vec<String> {
+        let mut paths: Vec<String> = Vec::new();
+        for ext in EXTS {
+            for p in [
+                sfa_path(ext, verb_name),
+                verb_path(ext, verb_name),
+                verb_path(&resolve_progid(ext), verb_name),
+            ] {
                 if !paths.contains(&p) {
                     paths.push(p);
                 }
@@ -55,8 +87,8 @@ mod imp {
         paths
     }
 
-    fn command_line(exe: &std::path::Path) -> String {
-        format!("\"{}\" --extract-here \"%1\"", exe.display())
+    fn command_line(exe: &std::path::Path, flag: &str) -> String {
+        format!("\"{}\" {flag} \"%1\"", exe.display())
     }
 
     /// 通知 Explorer 文件关联已变化，刷新右键菜单缓存。
@@ -66,27 +98,30 @@ mod imp {
         }
     }
 
-    /// 注册 .zip/.7z 右键菜单「直接解压」。
+    /// 注册 .zip/.7z 右键菜单全部动词。
     pub fn register() -> Result<(), String> {
         let exe = std::env::current_exe().map_err(|e| e.to_string())?;
-        let cmd = command_line(&exe);
         let hkcu = RegKey::predef(HKEY_CURRENT_USER);
-        for path in target_paths() {
-            let (verb, _disp) = hkcu.create_subkey(&path).map_err(|e| e.to_string())?;
-            verb.set_value("", &VERB_DISPLAY).map_err(|e| e.to_string())?;
-            verb.set_value("Icon", &format!("{},0", exe.display()))
-                .map_err(|e| e.to_string())?;
-            let (cmd_key, _) = verb.create_subkey("command").map_err(|e| e.to_string())?;
-            cmd_key.set_value("", &cmd).map_err(|e| e.to_string())?;
+        for (verb_name, display, flag) in VERBS {
+            let cmd = command_line(&exe, flag);
+            let display_str = display.to_string();
+            for path in verb_target_paths(verb_name) {
+                let (verb, _) = hkcu.create_subkey(&path).map_err(|e| e.to_string())?;
+                verb.set_value("", &display_str).map_err(|e| e.to_string())?;
+                verb.set_value("Icon", &format!("{},0", exe.display()))
+                    .map_err(|e| e.to_string())?;
+                let (cmd_key, _) = verb.create_subkey("command").map_err(|e| e.to_string())?;
+                cmd_key.set_value("", &cmd).map_err(|e| e.to_string())?;
+            }
         }
         notify_shell();
         Ok(())
     }
 
-    /// 移除 .zip/.7z 右键菜单「直接解压」。
+    /// 移除 .zip/.7z 右键菜单全部动词。
     pub fn unregister() -> Result<(), String> {
         let hkcu = RegKey::predef(HKEY_CURRENT_USER);
-        for path in target_paths() {
+        for path in all_target_paths() {
             match hkcu.delete_subkey_all(&path) {
                 Ok(()) => {}
                 Err(e) if e.kind() == io::ErrorKind::NotFound => {}
@@ -100,7 +135,7 @@ mod imp {
     /// 是否已注册（以目标路径是否存在为准）。
     pub fn is_registered() -> bool {
         let hkcu = RegKey::predef(HKEY_CURRENT_USER);
-        target_paths().iter().any(|p| hkcu.open_subkey(p).is_ok())
+        all_target_paths().iter().any(|p| hkcu.open_subkey(p).is_ok())
     }
 }
 
@@ -136,15 +171,16 @@ mod tests {
         imp::register().expect("注册应成功");
 
         let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
-        for path in imp::target_paths() {
+        let verbs = ["--open", "--extract-here", "--extract-to", "--extract-named"];
+        for path in imp::all_target_paths() {
             let cmd: String = hkcu
-                .open_subkey(format!(r"{path}\command"))
+                .open_subkey(format!("{path}\\command"))
                 .expect("command 键应存在")
                 .get_value("")
                 .expect("command 默认值应存在");
             assert!(
-                cmd.contains("--extract-here"),
-                "命令应包含 --extract-here: {cmd}"
+                verbs.iter().any(|v| cmd.contains(v)),
+                "命令应包含有效参数: {cmd}"
             );
         }
 

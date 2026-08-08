@@ -14,3 +14,4 @@ zip.workspace = true
 sevenz-rust2.workspace = true
 rayon.workspace = true
 parking_lot.workspace = true
+path-slash.workspace = true

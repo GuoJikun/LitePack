@@ -10,19 +10,7 @@
     "beforeBuildCommand": "pnpm build"
   },
   "app": {
-    "windows": [
-      {
-        "title": "LitePack",
-        "width": 960,
-        "height": 700,
-        "minWidth": 720,
-        "minHeight": 520,
-        "resizable": true,
-        "fullscreen": false,
-        "decorations": false,
-        "dragDropEnabled": true
-      }
-    ],
+    "windows": [],
     "security": {
       "csp": null
     }

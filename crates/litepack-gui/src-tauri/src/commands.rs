@@ -10,7 +10,7 @@ use tauri::ipc::Channel;
 use tauri::State;
 
 use crate::context_menu;
-use crate::state::{OperationRegistry, PendingExtract};
+use crate::state::{OperationRegistry, PendingAction, PendingActionState};
 
 /// 通过 Channel 推送的事件：进度 / 完成 / 出错。
 #[derive(Clone, Debug, Serialize)]
@@ -184,9 +184,16 @@ pub(crate) fn context_menu_status() -> bool {
     context_menu::is_registered()
 }
 
+/// 读取并消耗待处理的右键菜单操作（返回操作类型和路径）。
 #[tauri::command]
-pub(crate) fn take_pending_extract(state: State<'_, PendingExtract>) -> Option<String> {
+pub(crate) fn take_pending_action(state: State<'_, PendingActionState>) -> Option<PendingAction> {
     state.0.lock().take()
+}
+
+/// 向后兼容：仅返回待处理的归档路径（旧前端使用）。
+#[tauri::command]
+pub(crate) fn take_pending_extract(state: State<'_, PendingActionState>) -> Option<String> {
+    state.0.lock().take().map(|a| a.path)
 }
 
 #[tauri::command]
@@ -214,4 +221,13 @@ fn validate_target(target: &str, format: &str) -> Result<(), String> {
         return Err(format!("不支持的格式: {expected}"));
     }
     Ok(())
+}
+
+/// 将 Windows 反斜杠路径转换为正斜杠路径。
+#[tauri::command]
+pub(crate) fn normalize_path(path: String) -> String {
+    use path_slash::PathExt;
+    std::path::Path::new(&path)
+        .to_slash_lossy()
+        .into_owned()
 }

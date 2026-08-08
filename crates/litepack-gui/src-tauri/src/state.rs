@@ -3,6 +3,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use litepack_core::CancelHandle;
 use parking_lot::Mutex;
+use serde::Serialize;
 
 /// 操作注册表：`id -> 取消句柄`，供 `cancel_operation` 使用。
 pub struct OperationRegistry {
@@ -10,10 +11,36 @@ pub struct OperationRegistry {
     next_id: AtomicU64,
 }
 
-/// 启动参数中 `--extract-here <path>` 携带的归档路径，供前端读取。
-pub struct PendingExtract(pub Mutex<Option<String>>);
+/// 待处理的右键菜单操作类型。
+#[derive(Clone, Debug, Serialize)]
+#[serde(tag = "type")]
+pub enum PendingActionType {
+    /// 打开/浏览归档
+    #[serde(rename = "open")]
+    Open,
+    /// 解压到当前文件夹
+    #[serde(rename = "extract-here")]
+    ExtractHere,
+    /// 解压到...（弹出对话框选择目录）
+    #[serde(rename = "extract-to")]
+    ExtractTo,
+    /// 解压到同名目录
+    #[serde(rename = "extract-named")]
+    ExtractNamed,
+}
 
-impl Default for PendingExtract {
+/// 待处理的右键菜单操作，包含操作类型和归档路径。
+#[derive(Clone, Debug, Serialize)]
+pub struct PendingAction {
+    #[serde(rename = "type")]
+    pub action: PendingActionType,
+    pub path: String,
+}
+
+/// 启动参数中携带的待处理操作，供前端读取。
+pub struct PendingActionState(pub Mutex<Option<PendingAction>>);
+
+impl Default for PendingActionState {
     fn default() -> Self {
         Self(Mutex::new(None))
     }
@@ -56,4 +83,3 @@ impl OperationRegistry {
         self.inner.lock().remove(&id);
     }
 }
-

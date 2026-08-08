@@ -22,3 +22,16 @@ export type ChannelEvent =
   | { type: "Progress"; data: ProgressReport }
   | { type: "Done"; data: { id: number } }
   | { type: "Error"; data: { id: number; message: string } };
+
+/// 右键菜单待处理操作类型
+export type PendingActionType =
+  | "open"
+  | "extract-here"
+  | "extract-to"
+  | "extract-named";
+
+/// 右键菜单待处理操作
+export interface PendingAction {
+  type: PendingActionType;
+  path: string;
+}

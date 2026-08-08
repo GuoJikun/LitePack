@@ -3,7 +3,8 @@
   "identifier": "default",
   "description": "LitePack 主窗口默认权限",
   "windows": [
-    "main"
+    "main",
+    "extract"
   ],
   "permissions": [
     "core:default",
@@ -16,6 +17,7 @@
     "core:window:allow-start-dragging",
     "core:window:allow-internal-toggle-maximize",
     "dialog:default",
-    "fs:default"
+    "fs:default",
+    "log:default"
   ]
 }

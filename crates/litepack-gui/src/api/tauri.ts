@@ -1,5 +1,10 @@
 import { invoke, Channel } from "@tauri-apps/api/core";
-import type { ArchiveFormat, ChannelEvent, EntryInfo } from "../types";
+import type {
+  ArchiveFormat,
+  ChannelEvent,
+  EntryInfo,
+  PendingAction,
+} from "../types";
 
 export function createProgressChannel(
   onEvent: (e: ChannelEvent) => void,
@@ -69,10 +74,18 @@ export function contextMenuStatus(): Promise<boolean> {
   return invoke("context_menu_status");
 }
 
+export function takePendingAction(): Promise<PendingAction | null> {
+  return invoke("take_pending_action");
+}
+
 export function takePendingExtract(): Promise<string | null> {
   return invoke("take_pending_extract");
 }
 
 export function exitApp(): Promise<void> {
   return invoke("exit_app");
+}
+
+export function normalizePath(path: string): Promise<string> {
+  return invoke("normalize_path", { path });
 }
