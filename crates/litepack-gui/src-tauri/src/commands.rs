@@ -9,7 +9,8 @@ use serde::Serialize;
 use tauri::ipc::Channel;
 use tauri::State;
 
-use crate::state::OperationRegistry;
+use crate::context_menu;
+use crate::state::{OperationRegistry, PendingExtract};
 
 /// 通过 Channel 推送的事件：进度 / 完成 / 出错。
 #[derive(Clone, Serialize)]
@@ -156,6 +157,31 @@ pub(crate) fn cancel_operation(
     } else {
         Err("操作不存在或已结束".to_string())
     }
+}
+
+#[tauri::command]
+pub(crate) fn register_context_menu() -> Result<(), String> {
+    context_menu::register()
+}
+
+#[tauri::command]
+pub(crate) fn unregister_context_menu() -> Result<(), String> {
+    context_menu::unregister()
+}
+
+#[tauri::command]
+pub(crate) fn context_menu_status() -> bool {
+    context_menu::is_registered()
+}
+
+#[tauri::command]
+pub(crate) fn take_pending_extract(state: State<'_, PendingExtract>) -> Option<String> {
+    state.0.lock().take()
+}
+
+#[tauri::command]
+pub(crate) fn exit_app(app: tauri::AppHandle) {
+    app.exit(0);
 }
 
 fn validate_target(target: &str, format: &str) -> Result<(), String> {

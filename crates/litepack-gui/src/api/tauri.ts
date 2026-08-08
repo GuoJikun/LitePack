@@ -56,3 +56,23 @@ export function listArchive(archive: string): Promise<EntryInfo[]> {
 export function cancelOperation(id: number): Promise<void> {
   return invoke("cancel_operation", { id });
 }
+
+export function registerContextMenu(): Promise<void> {
+  return invoke("register_context_menu");
+}
+
+export function unregisterContextMenu(): Promise<void> {
+  return invoke("unregister_context_menu");
+}
+
+export function contextMenuStatus(): Promise<boolean> {
+  return invoke("context_menu_status");
+}
+
+export function takePendingExtract(): Promise<string | null> {
+  return invoke("take_pending_extract");
+}
+
+export function exitApp(): Promise<void> {
+  return invoke("exit_app");
+}

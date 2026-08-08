@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { open } from "@tauri-apps/plugin-dialog";
 import TitleBar from "./components/TitleBar.vue";
 import Toolbar from "./components/Toolbar.vue";
@@ -9,7 +9,13 @@ import StatusBar from "./components/StatusBar.vue";
 import ProgressBar from "./components/ProgressBar.vue";
 import PasswordDialog from "./components/PasswordDialog.vue";
 import { useAppStore } from "./stores/app";
-import { extractArchive, createProgressChannel, listArchive } from "./api/tauri";
+import {
+  extractArchive,
+  createProgressChannel,
+  listArchive,
+  takePendingExtract,
+  exitApp,
+} from "./api/tauri";
 import type { ChannelEvent } from "./types";
 
 const store = useAppStore();
@@ -19,6 +25,7 @@ const openError = ref("");
 const showPassword = ref(false);
 const passwordError = ref("");
 let pendingTarget: string | undefined;
+let autoExit = false;
 
 const canExtract = computed(() => !!store.archive && !store.task);
 
@@ -43,6 +50,9 @@ function handleEvent(e: ChannelEvent) {
     store.updateProgress(e.data);
   } else if (e.type === "Done") {
     store.finishTask(e.data.id, true);
+    if (autoExit) {
+      void exitApp();
+    }
   } else if (e.type === "Error") {
     const isPw = /密码|password/i.test(e.data.message);
     if (isPw && pendingTarget) {
@@ -107,6 +117,27 @@ function onPasswordCancel() {
   passwordError.value = "";
   pendingTarget = undefined;
 }
+
+// 右键菜单「直接解压」入口：启动时携带 --extract-here <path>，
+// 自动解压到归档所在目录，完成后退出应用。
+async function handlePendingExtract(path: string) {
+  await openArchive(path);
+  if (!store.archive) return;
+  autoExit = true;
+  const idx = Math.max(
+    store.archive.lastIndexOf("/"),
+    store.archive.lastIndexOf("\\"),
+  );
+  pendingTarget = idx > 0 ? store.archive.slice(0, idx) : ".";
+  await runExtract(pendingTarget, undefined);
+}
+
+onMounted(async () => {
+  const pending = await takePendingExtract();
+  if (pending) {
+    await handlePendingExtract(pending);
+  }
+});
 </script>
 
 <template>

@@ -188,6 +188,7 @@ async fn cancel_operation(id: u64) -> Result<(), String>
 - [x] **M5 前端**：三视图 + 拖拽 + 进度/取消 + 主题系统（亮/暗）；验证 TS 6 + vue-tsc 3.3.9 + Vite 8 兼容性
 - [x] **M6 硬化**：安全用例、错误处理打磨、`clippy -- -D warnings`
 - [x] **M7 发布**：LICENSE/THIRD_PARTY_NOTICES、NSIS 打包、CI 三平台
+- [x] **M8 右键菜单**：Windows 资源管理器 .zip/.7z 右键「直接解压」（HKCU 注册 + `--extract-here` 自动解压后退出 + 设置开关 + NSIS 安装/卸载钩子）
 
 ## 11. Tauri 工程初始化流程（M4）
 
@@ -222,3 +223,4 @@ async fn cancel_operation(id: u64) -> Result<(), String>
 - 依赖：全最新稳定版，许可证 MIT/Apache-2.0
 - 纯 Rust 编解码，不用 `unrar`（RARLAB 许可证禁止自由分发）
 - 加密：做（7z AES-256 + ZIP 密码）；主题：亮/暗两套；状态管理：pinia；包管理：pnpm
+- 右键菜单：仅 Windows，注册在 `HKCU\Software\Classes\.zip|.7z\shell\LitePackExtractHere`（winreg 0.55，Windows-only target 依赖）；`--extract-here <path>` 启动参数由前端 `take_pending_extract()` 读取并自动解压到归档所在目录、完成后 `exit_app()` 退出；NSIS 用 `installerHooks`（hooks.nsh）在安装时写键、卸载时删键

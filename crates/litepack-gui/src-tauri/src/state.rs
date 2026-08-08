@@ -10,6 +10,15 @@ pub struct OperationRegistry {
     next_id: AtomicU64,
 }
 
+/// 启动参数中 `--extract-here <path>` 携带的归档路径，供前端读取。
+pub struct PendingExtract(pub Mutex<Option<String>>);
+
+impl Default for PendingExtract {
+    fn default() -> Self {
+        Self(Mutex::new(None))
+    }
+}
+
 impl Default for OperationRegistry {
     fn default() -> Self {
         Self::new()

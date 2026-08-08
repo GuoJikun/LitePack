@@ -2043,6 +2043,7 @@ dependencies = [
  "tauri-plugin-dialog",
  "tauri-plugin-fs",
  "thiserror 2.0.19",
+ "winreg",
 ]
 
 [[package]]

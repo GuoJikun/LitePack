@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useAppStore } from "../stores/app";
+import SettingsMenu from "./SettingsMenu.vue";
 
 const store = useAppStore();
 
@@ -43,6 +44,7 @@ defineProps<{
           </template>
         </svg>
       </button>
+      <SettingsMenu />
     </div>
   </div>
 </template>
