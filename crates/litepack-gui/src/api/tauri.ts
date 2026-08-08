@@ -42,7 +42,7 @@ export interface ExtractRequest {
 export function extractArchive(req: ExtractRequest): Promise<number> {
   return invoke("extract_archive", {
     archive: req.archive,
-    out_dir: req.outDir,
+    outDir: req.outDir,
     password: req.password,
     overwrite: req.overwrite,
     progress: req.progress,

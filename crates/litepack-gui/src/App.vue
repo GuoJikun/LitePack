@@ -24,6 +24,8 @@ const loading = ref(false);
 const openError = ref("");
 const showPassword = ref(false);
 const passwordError = ref("");
+const toast = ref("");
+let toastTimer: ReturnType<typeof setTimeout> | undefined;
 // 密码框用途：open=打开(头部加密的 7z) / extract=解压
 const passwordFor = ref<"open" | "extract">("extract");
 let pendingTarget: string | undefined;
@@ -32,9 +34,18 @@ let openedPassword: string | undefined;
 let autoExit = false;
 // 右键菜单场景：打开成功后自动解压
 let autoExtractAfterOpen = false;
+// 通道事件缓冲：后端可能在 startTask 前就发回事件，先暂存再按序回放。
+let channelReady = false;
+let pendingEvents: ChannelEvent[] = [];
 
 const canExtract = computed(() => !!store.archive && !store.task);
 const hasEncrypted = computed(() => store.entries.some((e) => e.encrypted));
+
+function showToast(msg: string) {
+  toast.value = msg;
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => (toast.value = ""), 3000);
+}
 
 async function openArchive(path: string, password?: string) {
   loading.value = true;
@@ -68,10 +79,19 @@ async function openArchive(path: string, password?: string) {
 }
 
 function handleEvent(e: ChannelEvent) {
+  if (!channelReady) {
+    pendingEvents.push(e);
+    return;
+  }
+  dispatchEvent(e);
+}
+
+function dispatchEvent(e: ChannelEvent) {
   if (e.type === "Progress") {
     store.updateProgress(e.data);
   } else if (e.type === "Done") {
     store.finishTask(e.data.id, true);
+    if (!autoExit) showToast("解压完成");
     if (autoExit) {
       void exitApp();
     }
@@ -85,21 +105,31 @@ function handleEvent(e: ChannelEvent) {
       showPassword.value = true;
     } else {
       store.finishTask(e.data.id, false, e.data.message);
+      showToast(e.data.message);
     }
   }
 }
 
 async function runExtract(target: string, password: string | undefined) {
   if (!store.archive) return;
+  channelReady = false;
+  pendingEvents = [];
   const progress = createProgressChannel(handleEvent);
-  const id = await extractArchive({
-    archive: store.archive,
-    outDir: target,
-    password,
-    overwrite: false,
-    progress,
-  });
-  store.startTask(id, "extract");
+  try {
+    const id = await extractArchive({
+      archive: store.archive,
+      outDir: target,
+      password,
+      overwrite: false,
+      progress,
+    });
+    store.startTask(id, "extract");
+    channelReady = true;
+    for (const e of pendingEvents) dispatchEvent(e);
+    pendingEvents = [];
+  } catch (e) {
+    showToast("解压失败: " + String(e));
+  }
 }
 
 function startExtract(target: string, password?: string) {
@@ -209,6 +239,10 @@ onMounted(async () => {
   </div>
 
   <ProgressBar />
+
+  <Transition name="toast">
+    <div v-if="toast" class="toast">{{ toast }}</div>
+  </Transition>
 
   <PasswordDialog
     v-if="showPassword"

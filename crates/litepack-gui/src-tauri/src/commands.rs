@@ -13,7 +13,7 @@ use crate::context_menu;
 use crate::state::{OperationRegistry, PendingExtract};
 
 /// 通过 Channel 推送的事件：进度 / 完成 / 出错。
-#[derive(Clone, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 #[serde(tag = "type", content = "data")]
 pub enum ChannelEvent {
     Progress(ProgressReport),
@@ -105,6 +105,7 @@ pub(crate) async fn extract_archive(
     overwrite: bool,
     progress: Channel<ChannelEvent>,
 ) -> Result<u64, String> {
+    eprintln!("[extract_archive] archive={archive} out_dir={out_dir} overwrite={overwrite}");
     let opts = ExtractOptions {
         password,
         overwrite: if overwrite {
@@ -119,6 +120,7 @@ pub(crate) async fn extract_archive(
     let sink = ChannelSink { channel: progress };
 
     tauri::async_runtime::spawn_blocking(move || {
+        eprintln!("[extract_archive] spawn_blocking started, id={id}");
         let result = litepack_core::decompress(
             Path::new(&archive),
             Path::new(&out_dir),
@@ -126,6 +128,7 @@ pub(crate) async fn extract_archive(
             &sink,
             &cancel,
         );
+        eprintln!("[extract_archive] decompress result: {result:?}");
         registry.unregister(id);
         let event = match result {
             Ok(()) => ChannelEvent::Done { id },
@@ -134,7 +137,9 @@ pub(crate) async fn extract_archive(
                 message: e.to_string(),
             },
         };
+        eprintln!("[extract_archive] sending event: {event:?}");
         let _ = sink.channel.send(event);
+        eprintln!("[extract_archive] event sent");
     });
     Ok(id)
 }
