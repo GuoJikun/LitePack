@@ -33,6 +33,7 @@ pub fn list(archive: &Path) -> Result<Vec<EntryInfo>> {
             compressed_size: Some(e.compressed_size()),
             method: Some(e.compression().to_string()),
             modified,
+            encrypted: e.encrypted(),
         });
     }
     Ok(out)

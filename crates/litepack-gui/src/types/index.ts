@@ -8,6 +8,7 @@ export interface EntryInfo {
   compressed_size: number | null;
   method: string | null;
   modified: number | null;
+  encrypted: boolean;
 }
 
 export interface ProgressReport {

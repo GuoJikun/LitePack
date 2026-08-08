@@ -140,11 +140,16 @@ pub(crate) async fn extract_archive(
 }
 
 #[tauri::command]
-pub(crate) async fn list_archive(archive: String) -> Result<Vec<EntryInfo>, String> {
-    tauri::async_runtime::spawn_blocking(move || litepack_core::list(Path::new(&archive)))
-        .await
-        .map_err(err_msg)?
-        .map_err(err_msg)
+pub(crate) async fn list_archive(
+    archive: String,
+    password: Option<String>,
+) -> Result<Vec<EntryInfo>, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        litepack_core::list_with_password(Path::new(&archive), password.as_deref())
+    })
+    .await
+    .map_err(err_msg)?
+    .map_err(err_msg)
 }
 
 #[tauri::command]

@@ -24,22 +24,44 @@ const loading = ref(false);
 const openError = ref("");
 const showPassword = ref(false);
 const passwordError = ref("");
+// 密码框用途：open=打开(头部加密的 7z) / extract=解压
+const passwordFor = ref<"open" | "extract">("extract");
 let pendingTarget: string | undefined;
+let pendingOpenPath: string | undefined;
+let openedPassword: string | undefined;
 let autoExit = false;
+// 右键菜单场景：打开成功后自动解压
+let autoExtractAfterOpen = false;
 
 const canExtract = computed(() => !!store.archive && !store.task);
+const hasEncrypted = computed(() => store.entries.some((e) => e.encrypted));
 
-async function openArchive(path: string) {
+async function openArchive(path: string, password?: string) {
   loading.value = true;
   openError.value = "";
   try {
-    const entries = await listArchive(path);
+    const entries = await listArchive(path, password);
     const ext = (path.match(/\.([^.]+)$/)?.[1] ?? "").toLowerCase();
     const name = path.split(/[\\/]/).pop() ?? path;
     store.openArchive(path, name, ext === "7z" ? "7z" : "zip");
     store.entries = entries;
+    openedPassword = password;
+    if (autoExtractAfterOpen && pendingTarget) {
+      autoExtractAfterOpen = false;
+      void runExtract(pendingTarget, openedPassword);
+    }
   } catch (e) {
-    openError.value = String(e);
+    const msg = String(e);
+    const isPw = /密码|password|加密/i.test(msg);
+    if (isPw && !password) {
+      // 归档头部加密，需要密码才能读取
+      pendingOpenPath = path;
+      passwordFor.value = "open";
+      passwordError.value = "";
+      showPassword.value = true;
+    } else {
+      openError.value = msg;
+    }
   } finally {
     loading.value = false;
   }
@@ -58,6 +80,7 @@ function handleEvent(e: ChannelEvent) {
     if (isPw && pendingTarget) {
       // 需要密码（或密码错误），弹出输入框
       store.clearTaskError();
+      passwordFor.value = "extract";
       passwordError.value = e.data.message;
       showPassword.value = true;
     } else {
@@ -79,6 +102,17 @@ async function runExtract(target: string, password: string | undefined) {
   store.startTask(id, "extract");
 }
 
+function startExtract(target: string, password?: string) {
+  pendingTarget = target;
+  if (hasEncrypted.value) {
+    passwordFor.value = "extract";
+    passwordError.value = "";
+    showPassword.value = true;
+  } else {
+    void runExtract(target, password);
+  }
+}
+
 async function extractTo() {
   if (!store.archive) return;
   const picked = await open({
@@ -87,9 +121,7 @@ async function extractTo() {
     title: "选择解压目标文件夹",
   });
   if (picked && !Array.isArray(picked)) {
-    pendingTarget = picked;
-    showPassword.value = true;
-    passwordError.value = "";
+    startExtract(picked);
   }
 }
 
@@ -99,16 +131,22 @@ function extractHere() {
     store.archive.lastIndexOf("/"),
     store.archive.lastIndexOf("\\"),
   );
-  pendingTarget = idx > 0 ? store.archive.slice(0, idx) : ".";
-  showPassword.value = true;
-  passwordError.value = "";
+  startExtract(idx > 0 ? store.archive.slice(0, idx) : ".");
 }
 
 function onPasswordSubmit(pw: string) {
   showPassword.value = false;
   passwordError.value = "";
-  if (pendingTarget) {
-    void runExtract(pendingTarget, pw || undefined);
+  if (passwordFor.value === "open") {
+    const p = pendingOpenPath;
+    pendingOpenPath = undefined;
+    if (p) void openArchive(p, pw || undefined);
+    return;
+  }
+  const t = pendingTarget;
+  pendingTarget = undefined;
+  if (t) {
+    void runExtract(t, pw || undefined);
   }
 }
 
@@ -116,20 +154,22 @@ function onPasswordCancel() {
   showPassword.value = false;
   passwordError.value = "";
   pendingTarget = undefined;
+  pendingOpenPath = undefined;
+  autoExtractAfterOpen = false;
 }
 
 // 右键菜单「直接解压」入口：启动时携带 --extract-here <path>，
 // 自动解压到归档所在目录，完成后退出应用。
 async function handlePendingExtract(path: string) {
-  await openArchive(path);
-  if (!store.archive) return;
   autoExit = true;
   const idx = Math.max(
-    store.archive.lastIndexOf("/"),
-    store.archive.lastIndexOf("\\"),
+    path.lastIndexOf("/"),
+    path.lastIndexOf("\\"),
   );
-  pendingTarget = idx > 0 ? store.archive.slice(0, idx) : ".";
-  await runExtract(pendingTarget, undefined);
+  pendingTarget = idx > 0 ? path.slice(0, idx) : ".";
+  // 头部加密的 7z 在 openArchive 中会先弹密码框，成功后自动继续解压。
+  autoExtractAfterOpen = true;
+  await openArchive(path);
 }
 
 onMounted(async () => {

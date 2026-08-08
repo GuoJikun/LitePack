@@ -25,9 +25,14 @@ pub fn detect_format(path: &Path) -> Result<ArchiveFormat> {
 
 /// 列出归档内全部条目。
 pub fn list(archive: &Path) -> Result<Vec<EntryInfo>> {
+    list_with_password(archive, None)
+}
+
+/// 列出归档内全部条目；`password` 用于读取头部加密的 7z 归档。
+pub fn list_with_password(archive: &Path, password: Option<&str>) -> Result<Vec<EntryInfo>> {
     match detect_format(archive)? {
         ArchiveFormat::Zip => zip::list(archive),
-        ArchiveFormat::SevenZ => sevenz::list(archive),
+        ArchiveFormat::SevenZ => sevenz::list_with_password(archive, password),
     }
 }
 

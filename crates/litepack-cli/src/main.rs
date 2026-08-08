@@ -127,10 +127,11 @@ fn run(cli: Cli) -> i32 {
                         let size = human_size(e.size);
                         let method = e.method.as_deref().unwrap_or("-");
                         let name = e.path.trim_end_matches(['/', '\\']);
+                        let lock = if e.encrypted { " 🔒" } else { "" };
                         if e.is_dir {
-                            println!("{:<8} {:>10}  {}/", "目录", size, name);
+                            println!("{:<8} {:>10}  {}/{}", "目录", size, name, lock);
                         } else {
-                            println!("{:<8} {:>10}  {}", method, size, name);
+                            println!("{:<8} {:>10}  {}{}", method, size, name, lock);
                         }
                     }
                     0

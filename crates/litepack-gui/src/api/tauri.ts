@@ -49,8 +49,8 @@ export function extractArchive(req: ExtractRequest): Promise<number> {
   });
 }
 
-export function listArchive(archive: string): Promise<EntryInfo[]> {
-  return invoke("list_archive", { archive });
+export function listArchive(archive: string, password?: string): Promise<EntryInfo[]> {
+  return invoke("list_archive", { archive, password });
 }
 
 export function cancelOperation(id: number): Promise<void> {

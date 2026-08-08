@@ -12,4 +12,6 @@ pub struct EntryInfo {
     pub method: Option<String>,
     /// 修改时间（Unix 秒）；归档未记录时为 None。
     pub modified: Option<u64>,
+    /// 条目是否加密。
+    pub encrypted: bool,
 }

@@ -26,3 +26,4 @@ parking_lot.workspace = true
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.55.0"
+windows-sys = { version = "0.60.0", features = ["Win32_UI_Shell"] }

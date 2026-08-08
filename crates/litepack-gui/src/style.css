@@ -433,6 +433,11 @@ input {
   text-overflow: ellipsis;
 }
 
+.file-table .col-name .lock-icon {
+  flex-shrink: 0;
+  color: var(--text-3);
+}
+
 .file-icon {
   width: 28px;
   height: 28px;

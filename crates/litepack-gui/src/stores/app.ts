@@ -49,6 +49,7 @@ export const useAppStore = defineStore("app", {
               compressed_size: null,
               method: null,
               modified: null,
+              encrypted: false,
             });
           }
         }

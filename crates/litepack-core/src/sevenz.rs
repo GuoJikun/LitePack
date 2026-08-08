@@ -22,16 +22,37 @@ const MAX_TOTAL_SIZE: u64 = 256 * 1024 * 1024 * 1024; // 256 GiB
 const MAX_RATIO: u64 = 10_000;
 
 pub fn list(archive: &Path) -> Result<Vec<EntryInfo>> {
+    list_with_password(archive, None)
+}
+
+/// 列出归档条目；`password` 用于读取头部加密的 7z 归档。
+pub fn list_with_password(archive: &Path, password: Option<&str>) -> Result<Vec<EntryInfo>> {
+    let has_password = password.is_some();
+    let pw = match password {
+        Some(p) => Password::from(p),
+        None => Password::empty(),
+    };
     let file = File::open(archive)?;
-    let reader = ArchiveReader::new(file, Password::empty()).map_err(|e| map_7z_error(e, false))?;
+    let reader = ArchiveReader::new(file, pw).map_err(|e| map_7z_error(e, has_password))?;
     let arch = reader.archive();
     if arch.files.len() > MAX_ENTRIES {
         return Err(Error::ZipBomb);
     }
+    // 逐 block 判定是否含 AES 加密 coder，用于标记对应文件为加密。
+    let encrypted_blocks: Vec<bool> = arch
+        .blocks
+        .iter()
+        .map(|b| {
+            b.coders
+                .iter()
+                .any(|c| c.encoder_method_id() == EncoderMethod::ID_AES256_SHA256)
+        })
+        .collect();
     Ok(arch
         .files
         .iter()
-        .map(|f| EntryInfo {
+        .enumerate()
+        .map(|(i, f)| EntryInfo {
             path: f.name.clone(),
             size: f.size,
             is_dir: f.is_directory,
@@ -45,6 +66,14 @@ pub fn list(archive: &Path) -> Result<Vec<EntryInfo>> {
             } else {
                 None
             },
+            encrypted: arch
+                .stream_map
+                .file_block_index
+                .get(i)
+                .and_then(|b| *b)
+                .and_then(|bi| encrypted_blocks.get(bi))
+                .copied()
+                .unwrap_or(false),
         })
         .collect())
 }
@@ -335,6 +364,15 @@ mod tests {
             &CancelHandle::new(),
         );
         assert!(matches!(r, Err(Error::Encrypted)), "{r:?}");
+
+        // 不带密码无法列出（头部加密）。
+        let r = list(&archive);
+        assert!(matches!(r, Err(Error::Encrypted)), "{r:?}");
+
+        // 带密码可列出，并标记条目为加密。
+        let listed = list_with_password(&archive, Some("pass123")).unwrap();
+        assert_eq!(listed.len(), 1);
+        assert!(listed[0].encrypted, "7z 加密条目应标记 encrypted");
     }
 
     #[test]
