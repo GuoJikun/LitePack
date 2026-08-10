@@ -26,6 +26,11 @@ const routes = [
     name: "extract-named",
     component: () => import("./views/ExtractNamedView.vue"),
   },
+  {
+    path: "/extract-password",
+    name: "extract-password",
+    component: () => import("./views/ExtractPasswordView.vue"),
+  },
 ];
 
 const router = createRouter({

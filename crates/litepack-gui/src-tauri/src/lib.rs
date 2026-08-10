@@ -178,6 +178,7 @@ pub fn run() {
             commands::take_pending_action,
             commands::take_pending_extract,
             commands::exit_app,
+            commands::open_extract_password_window,
             commands::normalize_path
         ])
         .run(tauri::generate_context!())

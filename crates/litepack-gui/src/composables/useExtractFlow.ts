@@ -4,6 +4,7 @@ import {
   createProgressChannel,
   exitApp,
   extractArchive,
+  openPasswordWindow,
 } from "../api/tauri";
 import { useAppStore } from "../stores/app";
 import type { ChannelEvent } from "../types";
@@ -47,6 +48,7 @@ export function useExtractFlow(archivePath: string) {
       store.clearTaskError();
       passwordError.value = e.data.message;
       showPassword.value = true;
+      void openPasswordWindow(e.data.message);
     } else {
       store.finishTask(e.data.id, false, e.data.message);
     }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 const props = defineProps<{
   error?: string;
@@ -11,10 +12,14 @@ const emit = defineEmits<{
 }>();
 
 const password = ref("");
+
+function closeWindow() {
+  getCurrentWindow().close().catch(() => {});
+}
 </script>
 
 <template>
-  <div class="modal-mask">
+  <div class="modal-mask" role="dialog" aria-modal="true" aria-label="输入压缩包密码">
     <div class="modal">
       <div class="modal-title">该压缩包已加密</div>
       <div v-if="props.error" class="modal-err">{{ props.error }}</div>
@@ -27,8 +32,8 @@ const password = ref("");
         autofocus
       />
       <div class="modal-actions">
-        <button class="modal-btn" @click="emit('cancel')">取消</button>
-        <button class="modal-btn primary" @click="emit('submit', password)">解压</button>
+        <button class="modal-btn" @click="emit('cancel'); closeWindow()">取消</button>
+        <button class="modal-btn primary" @click="emit('submit', password); closeWindow()">解压</button>
       </div>
     </div>
   </div>

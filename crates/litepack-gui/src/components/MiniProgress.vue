@@ -31,7 +31,7 @@ function formatBytes(bytes: number): string {
 </script>
 
 <template>
-  <div class="mini-progress">
+  <div class="mini-progress" :class="{ 'mini-progress--overlay': !error }">
     <div class="mini-progress-titlebar">
       <span class="mini-progress-title">
         {{ error ? "解压失败" : "解压中..." }}
@@ -66,14 +66,20 @@ function formatBytes(bytes: number): string {
 </template>
 
 <style scoped>
-.mini-progress {
+  .mini-progress {
   position: fixed;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 998;
+  pointer-events: auto;
 }
+
+.mini-progress--overlay {
+  z-index: 998;
+}
+
 
 .mini-progress-titlebar {
   position: absolute;

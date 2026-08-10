@@ -86,6 +86,10 @@ export function exitApp(): Promise<void> {
   return invoke("exit_app");
 }
 
+export function openPasswordWindow(errorMessage: string): Promise<void> {
+  return invoke("open_extract_password_window", { errorMessage });
+}
+
 export function normalizePath(path: string): Promise<string> {
   return invoke("normalize_path", { path });
 }

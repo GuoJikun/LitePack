@@ -201,6 +201,52 @@ pub(crate) fn exit_app(app: tauri::AppHandle) {
     app.exit(0);
 }
 
+#[tauri::command]
+pub(crate) fn open_extract_password_window(
+    app: tauri::AppHandle,
+    error_message: String,
+) -> Result<(), String> {
+    let route = format!(
+        "/extract-password?error={}",
+        urlencoding::encode(&error_message)
+    );
+    let route_clone = route.clone();
+    let navigated = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let navigated_clone = navigated.clone();
+
+    let _window = tauri::WebviewWindowBuilder::new(
+        &app,
+        "extract-password",
+        tauri::WebviewUrl::App("/".into()),
+    )
+    .title("LitePack - 输入密码")
+    .inner_size(400.0, 220.0)
+    .resizable(false)
+    .decorations(true)
+    .center()
+    .on_page_load(move |window, payload| {
+        use tauri::webview::PageLoadEvent;
+        if payload.event() == PageLoadEvent::Finished
+            && !navigated_clone.swap(true, std::sync::atomic::Ordering::SeqCst)
+        {
+            let resolved = window
+                .url()
+                .ok()
+                .and_then(|base| base.join(&route_clone).ok())
+                .or_else(|| tauri::Url::parse(&format!("tauri://localhost{route_clone}")).ok());
+            if let Some(url) = resolved {
+                let _ = window.navigate(url);
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+        }
+    })
+    .build()
+    .map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
 fn validate_target(target: &str, format: &str) -> Result<(), String> {
     let ext = Path::new(target)
         .extension()
