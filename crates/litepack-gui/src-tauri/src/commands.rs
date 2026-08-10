@@ -202,7 +202,7 @@ pub(crate) fn exit_app(app: tauri::AppHandle) {
 }
 
 #[tauri::command]
-pub(crate) fn open_extract_password_window(
+pub(crate) async fn open_extract_password_window(
     app: tauri::AppHandle,
     error_message: String,
 ) -> Result<(), String> {
@@ -225,25 +225,18 @@ pub(crate) fn open_extract_password_window(
     .decorations(true)
     .center()
     .on_page_load(move |window, payload| {
-        log::info!("页面加载完成: {:?}", payload);
         use tauri::webview::PageLoadEvent;
         if payload.event() == PageLoadEvent::Finished
             && !navigated_clone.swap(true, std::sync::atomic::Ordering::SeqCst)
         {
-            let resolved = window
-                .url()
-                .ok()
-                .and_then(|base| base.join(&route_clone).ok())
-                .or_else(|| tauri::Url::parse(&format!("tauri://localhost{route_clone}")).ok());
-            if let Some(url) = resolved {
-                navigate_to(&window, &url.to_string());
-                let _ = window.show();
-                let _ = window.set_focus();
-            }
+            log::info!("[extract-password] 页面加载完成，开始导航");
+            navigate_to(&window, &route_clone);
+            let _ = window.show();
+            let _ = window.set_focus();
         }
     })
-    .devtools(true)
-    .build();
+    .build()
+    .map_err(|e| format!("创建密码窗口失败: {e}"))?;
 
     Ok(())
 }
