@@ -29,6 +29,9 @@
       "nsis": {
         "languages": ["SimpChinese", "English"],
         "installerHooks": "hooks.nsh"
+      },
+      "msi": {
+        "language": "zh-CN"
       }
     }
   }
