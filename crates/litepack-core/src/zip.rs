@@ -609,8 +609,8 @@ with zipfile.ZipFile({archive:?}, "w", zipfile.ZIP_DEFLATED) as z:
         let verify = format!(
             r#"import zipfile, sys
 with zipfile.ZipFile({back:?}) as z:
-    assert "hello.txt" in z.namelist(), z.namelist()
-    assert z.read("hello.txt") == "你好 world".encode()
+    assert "out/hello.txt" in z.namelist(), z.namelist()
+    assert z.read("out/hello.txt") == "你好 world".encode()
 print("OK")"#
         );
         let out = std::process::Command::new(py)
