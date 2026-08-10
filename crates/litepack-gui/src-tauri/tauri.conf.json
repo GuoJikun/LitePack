@@ -30,8 +30,10 @@
         "languages": ["SimpChinese", "English"],
         "installerHooks": "hooks.nsh"
       },
-      "msi": {
-        "language": "zh-CN"
+      "wix": {
+        "language": "zh-CN",
+        "fragmentPaths": ["wix/context-menu.wxs"],
+        "componentRefs": ["ContextMenuRegistry"]
       }
     }
   }

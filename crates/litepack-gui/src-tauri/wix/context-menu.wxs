@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <DirectoryRef Id="INSTALLDIR">
+      <Component Id="ContextMenuRegistry" Guid="*" Win64="yes">
+        <RegistryKey Root="HKCU" Key="Software\Classes\SystemFileAssociations\.zip\shell\LitePackOpen">
+          <RegistryValue Type="string" Value="用 LitePack 打开(&amp;O)" />
+          <RegistryValue Name="Icon" Type="string" Value="[!Path],0" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\SystemFileAssociations\.zip\shell\LitePackOpen\command">
+          <RegistryValue Type="string" Value="&quot;[!Path]&quot; --open &quot;%1&quot;" KeyPath="yes" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\.zip\shell\LitePackOpen">
+          <RegistryValue Type="string" Value="用 LitePack 打开(&amp;O)" />
+          <RegistryValue Name="Icon" Type="string" Value="[!Path],0" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\.zip\shell\LitePackOpen\command">
+          <RegistryValue Type="string" Value="&quot;[!Path]&quot; --open &quot;%1&quot;" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\SystemFileAssociations\.zip\shell\LitePackExtractHere">
+          <RegistryValue Type="string" Value="直接解压(&amp;X)" />
+          <RegistryValue Name="Icon" Type="string" Value="[!Path],0" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\SystemFileAssociations\.zip\shell\LitePackExtractHere\command">
+          <RegistryValue Type="string" Value="&quot;[!Path]&quot; --extract-here &quot;%1&quot;" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\.zip\shell\LitePackExtractHere">
+          <RegistryValue Type="string" Value="直接解压(&amp;X)" />
+          <RegistryValue Name="Icon" Type="string" Value="[!Path],0" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\.zip\shell\LitePackExtractHere\command">
+          <RegistryValue Type="string" Value="&quot;[!Path]&quot; --extract-here &quot;%1&quot;" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\SystemFileAssociations\.zip\shell\LitePackExtractTo">
+          <RegistryValue Type="string" Value="解压到...(&amp;E)..." />
+          <RegistryValue Name="Icon" Type="string" Value="[!Path],0" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\SystemFileAssociations\.zip\shell\LitePackExtractTo\command">
+          <RegistryValue Type="string" Value="&quot;[!Path]&quot; --extract-to &quot;%1&quot;" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\.zip\shell\LitePackExtractTo">
+          <RegistryValue Type="string" Value="解压到...(&amp;E)..." />
+          <RegistryValue Name="Icon" Type="string" Value="[!Path],0" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\.zip\shell\LitePackExtractTo\command">
+          <RegistryValue Type="string" Value="&quot;[!Path]&quot; --extract-to &quot;%1&quot;" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\SystemFileAssociations\.zip\shell\LitePackExtractNamed">
+          <RegistryValue Type="string" Value="解压到同名目录(&amp;N)" />
+          <RegistryValue Name="Icon" Type="string" Value="[!Path],0" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\SystemFileAssociations\.zip\shell\LitePackExtractNamed\command">
+          <RegistryValue Type="string" Value="&quot;[!Path]&quot; --extract-named &quot;%1&quot;" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\.zip\shell\LitePackExtractNamed">
+          <RegistryValue Type="string" Value="解压到同名目录(&amp;N)" />
+          <RegistryValue Name="Icon" Type="string" Value="[!Path],0" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\.zip\shell\LitePackExtractNamed\command">
+          <RegistryValue Type="string" Value="&quot;[!Path]&quot; --extract-named &quot;%1&quot;" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\SystemFileAssociations\.7z\shell\LitePackOpen">
+          <RegistryValue Type="string" Value="用 LitePack 打开(&amp;O)" />
+          <RegistryValue Name="Icon" Type="string" Value="[!Path],0" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\SystemFileAssociations\.7z\shell\LitePackOpen\command">
+          <RegistryValue Type="string" Value="&quot;[!Path]&quot; --open &quot;%1&quot;" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\.7z\shell\LitePackOpen">
+          <RegistryValue Type="string" Value="用 LitePack 打开(&amp;O)" />
+          <RegistryValue Name="Icon" Type="string" Value="[!Path],0" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\.7z\shell\LitePackOpen\command">
+          <RegistryValue Type="string" Value="&quot;[!Path]&quot; --open &quot;%1&quot;" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\SystemFileAssociations\.7z\shell\LitePackExtractHere">
+          <RegistryValue Type="string" Value="直接解压(&amp;X)" />
+          <RegistryValue Name="Icon" Type="string" Value="[!Path],0" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\SystemFileAssociations\.7z\shell\LitePackExtractHere\command">
+          <RegistryValue Type="string" Value="&quot;[!Path]&quot; --extract-here &quot;%1&quot;" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\.7z\shell\LitePackExtractHere">
+          <RegistryValue Type="string" Value="直接解压(&amp;X)" />
+          <RegistryValue Name="Icon" Type="string" Value="[!Path],0" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\.7z\shell\LitePackExtractHere\command">
+          <RegistryValue Type="string" Value="&quot;[!Path]&quot; --extract-here &quot;%1&quot;" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\SystemFileAssociations\.7z\shell\LitePackExtractTo">
+          <RegistryValue Type="string" Value="解压到...(&amp;E)..." />
+          <RegistryValue Name="Icon" Type="string" Value="[!Path],0" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\SystemFileAssociations\.7z\shell\LitePackExtractTo\command">
+          <RegistryValue Type="string" Value="&quot;[!Path]&quot; --extract-to &quot;%1&quot;" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\.7z\shell\LitePackExtractTo">
+          <RegistryValue Type="string" Value="解压到...(&amp;E)..." />
+          <RegistryValue Name="Icon" Type="string" Value="[!Path],0" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\.7z\shell\LitePackExtractTo\command">
+          <RegistryValue Type="string" Value="&quot;[!Path]&quot; --extract-to &quot;%1&quot;" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\SystemFileAssociations\.7z\shell\LitePackExtractNamed">
+          <RegistryValue Type="string" Value="解压到同名目录(&amp;N)" />
+          <RegistryValue Name="Icon" Type="string" Value="[!Path],0" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\SystemFileAssociations\.7z\shell\LitePackExtractNamed\command">
+          <RegistryValue Type="string" Value="&quot;[!Path]&quot; --extract-named &quot;%1&quot;" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\.7z\shell\LitePackExtractNamed">
+          <RegistryValue Type="string" Value="解压到同名目录(&amp;N)" />
+          <RegistryValue Name="Icon" Type="string" Value="[!Path],0" />
+        </RegistryKey>
+        <RegistryKey Root="HKCU" Key="Software\Classes\.7z\shell\LitePackExtractNamed\command">
+          <RegistryValue Type="string" Value="&quot;[!Path]&quot; --extract-named &quot;%1&quot;" />
+        </RegistryKey>
+      </Component>
+    </DirectoryRef>
+  </Fragment>
+</Wix>
