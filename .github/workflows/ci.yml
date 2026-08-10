@@ -63,7 +63,7 @@ jobs:
           - platform: windows-latest
             args: ""
           - platform: ubuntu-22.04
-            args: --no-bundle
+            args: ""
           - platform: macos-latest
             args: --target aarch64-apple-darwin
     runs-on: ${{ matrix.platform }}
@@ -95,7 +95,6 @@ jobs:
         run: cargo tauri build ${{ matrix.args }}
         working-directory: crates/litepack-gui
       - name: Upload artifacts
-        if: matrix.platform != 'ubuntu-22.04'
         uses: actions/upload-artifact@v4
         with:
           name: litepack-${{ matrix.platform }}
