@@ -1,18 +1,24 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { ref, computed } from "vue";
 import { useRoute } from "vue-router";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
 const route = useRoute();
 const win = getCurrentWindow();
+const password = ref("");
 
 const errorMessage = computed(() => {
   const raw = route.query.error;
   return typeof raw === "string" ? decodeURIComponent(raw) : "";
 });
 
-function onSubmit(password: string) {
-  // 这里先用一个简单的占位：关闭子窗口，后续再接入主窗口回传逻辑。
+async function onSubmit() {
+  await win.emit("password-submit", { password: password.value });
+  void win.close();
+}
+
+async function onCancel() {
+  await win.emit("password-cancel");
   void win.close();
 }
 </script>
@@ -22,7 +28,7 @@ function onSubmit(password: string) {
     <div class="password-titlebar">
       <span class="password-titlebar-text">LitePack - 输入密码</span>
       <div class="password-titlebar-buttons">
-        <button class="titlebar-btn" @click="win.close()">
+        <button class="titlebar-btn" @click="onCancel">
           <svg viewBox="0 0 12 12" width="12" height="12">
             <line x1="2" y1="2" x2="10" y2="10" stroke="currentColor" stroke-width="1.5" />
             <line x1="10" y1="2" x2="2" y2="10" stroke="currentColor" stroke-width="1.5" />
@@ -32,10 +38,17 @@ function onSubmit(password: string) {
     </div>
     <div class="password-body">
       <div v-if="errorMessage" class="password-window-error">{{ errorMessage }}</div>
-      <input class="modal-input" type="password" placeholder="请输入密码" />
+      <input
+        v-model="password"
+        class="modal-input"
+        type="password"
+        placeholder="请输入密码"
+        autofocus
+        @keydown.enter="onSubmit"
+      />
       <div class="modal-actions">
-        <button class="modal-btn" @click="win.close()">取消</button>
-        <button class="modal-btn primary" @click="onSubmit('')">解压</button>
+        <button class="modal-btn" @click="onCancel">取消</button>
+        <button class="modal-btn primary" @click="onSubmit">解压</button>
       </div>
     </div>
   </div>

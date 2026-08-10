@@ -5,7 +5,6 @@ import { useExtractFlow } from "../composables/useExtractFlow";
 import { useAppStore } from "../stores/app";
 import ExtractDialog from "../components/ExtractDialog.vue";
 import MiniProgress from "../components/MiniProgress.vue";
-import PasswordDialog from "../components/PasswordDialog.vue";
 
 const store = useAppStore();
 const route = useRoute();
@@ -14,8 +13,7 @@ const phase = ref<"dialog" | "progress">("dialog");
 const defaultDir = ref(".");
 const archiveName = ref("");
 
-const { showPassword, passwordError, runExtract, onPasswordSubmit, onPasswordCancel, onCancel } =
-  useExtractFlow(archivePath);
+const { runExtract, onCancel } = useExtractFlow(archivePath);
 
 onMounted(() => {
   const idx = Math.max(
@@ -50,12 +48,5 @@ function handleCancel() {
     :progress="store.task?.report ?? null"
     :error="store.task?.error ?? undefined"
     @cancel="onCancel"
-  />
-
-  <PasswordDialog
-    v-if="showPassword"
-    :error="passwordError || undefined"
-    @submit="onPasswordSubmit"
-    @cancel="onPasswordCancel"
   />
 </template>

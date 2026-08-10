@@ -1,4 +1,5 @@
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import {
   cancelOperation,
   createProgressChannel,
@@ -12,13 +13,12 @@ import type { ChannelEvent } from "../types";
 /**
  * 右键菜单「解压」流程的共享逻辑：
  * - 通过 Channel 接收进度/完成/错误事件
- * - 加密或密码错误时弹出密码框重试
+ * - 加密或密码错误时打开独立密码窗口，通过事件回传密码
  * - 出错后可取消并退出窗口（不卡死）
  */
 export function useExtractFlow(archivePath: string) {
   const store = useAppStore();
-  const showPassword = ref(false);
-  const passwordError = ref("");
+  const waitingForPassword = ref(false);
 
   let pendingTarget: string | undefined;
   let channelReady = false;
@@ -46,8 +46,7 @@ export function useExtractFlow(archivePath: string) {
     const isPw = /密码|password|加密/i.test(e.data.message);
     if (isPw && pendingTarget) {
       store.clearTaskError();
-      passwordError.value = e.data.message;
-      showPassword.value = true;
+      waitingForPassword.value = true;
       void openPasswordWindow(e.data.message);
     } else {
       store.finishTask(e.data.id, false, e.data.message);
@@ -76,20 +75,6 @@ export function useExtractFlow(archivePath: string) {
     }
   }
 
-  function onPasswordSubmit(pw: string) {
-    showPassword.value = false;
-    passwordError.value = "";
-    const t = pendingTarget;
-    if (t) void runExtract(t, pw || undefined);
-  }
-
-  function onPasswordCancel() {
-    showPassword.value = false;
-    passwordError.value = "";
-    pendingTarget = undefined;
-    void exitApp();
-  }
-
   function onCancel() {
     const id = store.task?.id;
     if (id != null) {
@@ -98,12 +83,24 @@ export function useExtractFlow(archivePath: string) {
     void exitApp();
   }
 
+  /* 监听密码窗口回传的事件 */
+  onMounted(() => {
+    const win = getCurrentWindow();
+    void win.listen<{ password: string }>("password-submit", (event) => {
+      waitingForPassword.value = false;
+      const t = pendingTarget;
+      if (t) void runExtract(t, event.payload.password || undefined);
+    });
+
+    void win.listen("password-cancel", () => {
+      waitingForPassword.value = false;
+      pendingTarget = undefined;
+      void exitApp();
+    });
+  });
+
   return {
-    showPassword,
-    passwordError,
     runExtract,
-    onPasswordSubmit,
-    onPasswordCancel,
     onCancel,
   };
 }
