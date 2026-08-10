@@ -16,7 +16,10 @@ pub struct CompressEntry {
 
 /// 收集待压缩条目：目录递归产生名称（含顶层目录名），文件直接加入。
 /// 隐藏文件/目录在 `skip_hidden` 时被排除。
-pub fn collect_entries(inputs: &[std::path::PathBuf], opts: &CompressOptions) -> Result<Vec<CompressEntry>> {
+pub fn collect_entries(
+    inputs: &[std::path::PathBuf],
+    opts: &CompressOptions,
+) -> Result<Vec<CompressEntry>> {
     let mut out = Vec::new();
     for input in inputs {
         if opts.skip_hidden && is_hidden(input) {
@@ -26,7 +29,12 @@ pub fn collect_entries(inputs: &[std::path::PathBuf], opts: &CompressOptions) ->
             let top = input
                 .file_name()
                 .and_then(|n| n.to_str())
-                .ok_or_else(|| Error::Io(std::io::Error::new(std::io::ErrorKind::InvalidInput, "无效目录名")))?
+                .ok_or_else(|| {
+                    Error::Io(std::io::Error::new(
+                        std::io::ErrorKind::InvalidInput,
+                        "无效目录名",
+                    ))
+                })?
                 .to_string();
             out.push(CompressEntry {
                 src: input.clone(),
@@ -39,7 +47,10 @@ pub fn collect_entries(inputs: &[std::path::PathBuf], opts: &CompressOptions) ->
             {
                 let entry = entry.map_err(std::io::Error::from)?;
                 let rel = entry.path().strip_prefix(input).map_err(|_| {
-                    Error::Io(std::io::Error::new(std::io::ErrorKind::InvalidInput, "路径解析失败"))
+                    Error::Io(std::io::Error::new(
+                        std::io::ErrorKind::InvalidInput,
+                        "路径解析失败",
+                    ))
                 })?;
                 if rel.as_os_str().is_empty() {
                     continue;
@@ -93,7 +104,8 @@ mod tests {
         std::fs::write(dir.join("sub/b.txt"), b"b").unwrap();
         std::fs::write(dir.join(".hidden"), b"h").unwrap();
 
-        let entries = collect_entries(std::slice::from_ref(&dir), &CompressOptions::default()).unwrap();
+        let entries =
+            collect_entries(std::slice::from_ref(&dir), &CompressOptions::default()).unwrap();
         let names: Vec<String> = entries.iter().map(|e| e.name.clone()).collect();
         let dirname = dir.file_name().unwrap().to_string_lossy().into_owned();
         assert!(names.contains(&format!("{dirname}/")));
@@ -110,7 +122,8 @@ mod tests {
         let _ = std::fs::create_dir_all(&dir);
         let f = dir.join("x.txt");
         std::fs::write(&f, b"x").unwrap();
-        let entries = collect_entries(std::slice::from_ref(&f), &CompressOptions::default()).unwrap();
+        let entries =
+            collect_entries(std::slice::from_ref(&f), &CompressOptions::default()).unwrap();
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].name, "x.txt");
     }

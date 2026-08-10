@@ -24,13 +24,15 @@ impl From<zip::result::ZipError> for Error {
         use zip::result::ZipError as Z;
         match e {
             Z::Io(e) => Error::Io(e),
-            Z::InvalidArchive(m) => {
-                Error::Io(std::io::Error::new(std::io::ErrorKind::InvalidData, m.as_ref().to_string()))
-            }
+            Z::InvalidArchive(m) => Error::Io(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                m.as_ref().to_string(),
+            )),
             Z::UnsupportedArchive(m) => Error::UnsupportedFormat(m.to_string()),
-            Z::FileNotFound => {
-                Error::Io(std::io::Error::new(std::io::ErrorKind::NotFound, "归档内条目不存在"))
-            }
+            Z::FileNotFound => Error::Io(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                "归档内条目不存在",
+            )),
             Z::InvalidPassword => Error::BadPassword,
             Z::CompressionMethodNotSupported(m) => {
                 Error::UnsupportedFormat(format!("不支持的 ZIP 压缩方法 0x{m:04X}"))

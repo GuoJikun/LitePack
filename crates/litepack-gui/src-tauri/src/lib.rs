@@ -4,7 +4,7 @@ pub mod state;
 
 use std::sync::Arc;
 
-use state::{PendingAction, PendingActionType, PendingActionState};
+use state::{PendingAction, PendingActionState, PendingActionType};
 
 fn pending_action_from_args() -> Option<PendingAction> {
     let args: Vec<String> = std::env::args().collect();
@@ -148,7 +148,15 @@ pub fn run() {
             log::info!("action={:?}, route={}", action.action, route);
 
             if is_extract {
-                create_window_with_route(app, "extract", "LitePack - 解压中", &route, 400.0, 150.0, false);
+                create_window_with_route(
+                    app,
+                    "extract",
+                    "LitePack - 解压中",
+                    &route,
+                    400.0,
+                    150.0,
+                    false,
+                );
             } else {
                 create_window_with_route(app, "main", "LitePack", &route, 960.0, 700.0, true);
             }

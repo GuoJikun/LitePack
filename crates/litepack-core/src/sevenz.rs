@@ -5,8 +5,8 @@ use std::path::Path;
 
 use sevenz_rust2::encoder_options::{AesEncoderOptions, Lzma2Options};
 use sevenz_rust2::{
-    ArchiveEntry, ArchiveReader, ArchiveWriter, EncoderConfiguration, EncoderMethod, Error as SevenzError,
-    Password,
+    ArchiveEntry, ArchiveReader, ArchiveWriter, EncoderConfiguration, EncoderMethod,
+    Error as SevenzError, Password,
 };
 
 use crate::entry::EntryInfo;
@@ -164,7 +164,8 @@ pub fn decompress(
         None => Password::empty(),
     };
     let file = File::open(archive)?;
-    let mut reader = ArchiveReader::new(file, password).map_err(|e| map_7z_error(e, has_password))?;
+    let mut reader =
+        ArchiveReader::new(file, password).map_err(|e| map_7z_error(e, has_password))?;
 
     let arch = reader.archive();
     if arch.files.len() > MAX_ENTRIES {
@@ -312,19 +313,43 @@ mod tests {
         std::fs::write(src.join("sub/b.txt"), vec![b'x'; 10_000]).unwrap();
 
         let archive = root.join("out.7z");
-        let entries = crate::walk::collect_entries(std::slice::from_ref(&src), &CompressOptions::default()).unwrap();
-        compress(&entries, &archive, &CompressOptions::default(), &NoopSink, &CancelHandle::new()).unwrap();
+        let entries =
+            crate::walk::collect_entries(std::slice::from_ref(&src), &CompressOptions::default())
+                .unwrap();
+        compress(
+            &entries,
+            &archive,
+            &CompressOptions::default(),
+            &NoopSink,
+            &CancelHandle::new(),
+        )
+        .unwrap();
 
         let listed = list(&archive).unwrap();
         let names: Vec<&str> = listed.iter().map(|e| e.path.as_str()).collect();
         assert!(names.contains(&"data/a.txt"));
         assert!(names.contains(&"data/sub/b.txt"));
-        assert!(names.iter().any(|n| ["data/empty_dir", "data/empty_dir/", "data/empty_dir\\"].contains(n)));
+        assert!(names
+            .iter()
+            .any(|n| ["data/empty_dir", "data/empty_dir/", "data/empty_dir\\"].contains(n)));
 
         let out = root.join("extracted");
-        decompress(&archive, &out, &ExtractOptions::default(), &NoopSink, &CancelHandle::new()).unwrap();
-        assert_eq!(std::fs::read_to_string(out.join("data/a.txt")).unwrap(), "hello world");
-        assert_eq!(std::fs::read(out.join("data/sub/b.txt")).unwrap().len(), 10_000);
+        decompress(
+            &archive,
+            &out,
+            &ExtractOptions::default(),
+            &NoopSink,
+            &CancelHandle::new(),
+        )
+        .unwrap();
+        assert_eq!(
+            std::fs::read_to_string(out.join("data/a.txt")).unwrap(),
+            "hello world"
+        );
+        assert_eq!(
+            std::fs::read(out.join("data/sub/b.txt")).unwrap().len(),
+            10_000
+        );
         assert!(out.join("data/empty_dir").is_dir());
     }
 
@@ -347,13 +372,22 @@ mod tests {
         };
         let out = root.join("ok");
         decompress(&archive, &out, &ok_opts, &NoopSink, &CancelHandle::new()).unwrap();
-        assert_eq!(std::fs::read_to_string(out.join("secret.txt")).unwrap(), "top secret");
+        assert_eq!(
+            std::fs::read_to_string(out.join("secret.txt")).unwrap(),
+            "top secret"
+        );
 
         let wrong_opts = ExtractOptions {
             password: Some("nope".into()),
             ..ExtractOptions::default()
         };
-        let r = decompress(&archive, &root.join("wrong"), &wrong_opts, &NoopSink, &CancelHandle::new());
+        let r = decompress(
+            &archive,
+            &root.join("wrong"),
+            &wrong_opts,
+            &NoopSink,
+            &CancelHandle::new(),
+        );
         assert!(matches!(r, Err(Error::BadPassword)), "{r:?}");
 
         let r = decompress(
@@ -381,13 +415,28 @@ mod tests {
         let big = root.join("big.bin");
         std::fs::write(&big, vec![0u8; 64 * 1024]).unwrap();
         let archive = root.join("big.7z");
-        let entries = crate::walk::collect_entries(std::slice::from_ref(&big), &CompressOptions::default()).unwrap();
-        compress(&entries, &archive, &CompressOptions::default(), &NoopSink, &CancelHandle::new()).unwrap();
+        let entries =
+            crate::walk::collect_entries(std::slice::from_ref(&big), &CompressOptions::default())
+                .unwrap();
+        compress(
+            &entries,
+            &archive,
+            &CompressOptions::default(),
+            &NoopSink,
+            &CancelHandle::new(),
+        )
+        .unwrap();
 
         let cancel = CancelHandle::new();
         cancel.cancel();
         let out = root.join("out");
-        let r = decompress(&archive, &out, &ExtractOptions::default(), &NoopSink, &cancel);
+        let r = decompress(
+            &archive,
+            &out,
+            &ExtractOptions::default(),
+            &NoopSink,
+            &cancel,
+        );
         assert!(matches!(r, Err(Error::Cancelled)), "{r:?}");
     }
 
@@ -403,7 +452,13 @@ mod tests {
         w.finish().unwrap();
 
         let out = root.join("out");
-        let r = decompress(&archive, &out, &ExtractOptions::default(), &NoopSink, &CancelHandle::new());
+        let r = decompress(
+            &archive,
+            &out,
+            &ExtractOptions::default(),
+            &NoopSink,
+            &CancelHandle::new(),
+        );
         assert!(matches!(r, Err(Error::PathTraversal(_))), "{r:?}");
     }
 
@@ -421,13 +476,23 @@ mod tests {
         w.finish().unwrap();
 
         let out = root.join("out");
-        let r = decompress(&archive, &out, &ExtractOptions::default(), &NoopSink, &CancelHandle::new());
+        let r = decompress(
+            &archive,
+            &out,
+            &ExtractOptions::default(),
+            &NoopSink,
+            &CancelHandle::new(),
+        );
         assert!(matches!(r, Err(Error::ZipBomb)), "{r:?}");
     }
 
     #[test]
     fn interop_with_system_7z() {
-        let has_7z = std::process::Command::new("7z").arg("i").output().map(|o| o.status.success()).unwrap_or(false);
+        let has_7z = std::process::Command::new("7z")
+            .arg("i")
+            .output()
+            .map(|o| o.status.success())
+            .unwrap_or(false);
         if !has_7z {
             eprintln!("系统 7z 不可用，跳过互操作测试");
             return;
@@ -452,14 +517,30 @@ mod tests {
         assert!(names.iter().any(|n| n.ends_with("a.txt")));
 
         let out = root.join("out");
-        decompress(&archive, &out, &ExtractOptions::default(), &NoopSink, &CancelHandle::new()).unwrap();
+        decompress(
+            &archive,
+            &out,
+            &ExtractOptions::default(),
+            &NoopSink,
+            &CancelHandle::new(),
+        )
+        .unwrap();
         let found = out.join("payload/a.txt");
         assert!(found.exists(), "提取路径不存在: {}", found.display());
 
         // 反向：我们生成的 7z 用系统 7z 解压。
         let ours = root.join("ours.7z");
-        let entries = crate::walk::collect_entries(std::slice::from_ref(&src), &CompressOptions::default()).unwrap();
-        compress(&entries, &ours, &CompressOptions::default(), &NoopSink, &CancelHandle::new()).unwrap();
+        let entries =
+            crate::walk::collect_entries(std::slice::from_ref(&src), &CompressOptions::default())
+                .unwrap();
+        compress(
+            &entries,
+            &ours,
+            &CompressOptions::default(),
+            &NoopSink,
+            &CancelHandle::new(),
+        )
+        .unwrap();
         let verify = root.join("verify");
         let status = std::process::Command::new("7z")
             .arg("x")

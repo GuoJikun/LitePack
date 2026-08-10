@@ -6,12 +6,16 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use indicatif::{ProgressBar, ProgressState, ProgressStyle};
 use litepack_core::{
-    CancelHandle, CompressOptions, Error as CoreError, ExtractOptions, Phase, ProgressReport,
-    ProgressSink, OverwriteMode,
+    CancelHandle, CompressOptions, Error as CoreError, ExtractOptions, OverwriteMode, Phase,
+    ProgressReport, ProgressSink,
 };
 
 #[derive(Parser)]
-#[command(name = "litepack", version, about = "LitePack：纯 Rust 压缩/解压工具（ZIP / 7z）")]
+#[command(
+    name = "litepack",
+    version,
+    about = "LitePack：纯 Rust 压缩/解压工具（ZIP / 7z）"
+)]
 struct Cli {
     #[command(subcommand)]
     command: Command,
@@ -72,14 +76,25 @@ fn main() {
 
 fn run(cli: Cli) -> i32 {
     match cli.command {
-        Command::Pack { src, output, level, password, overwrite, skip_hidden, format } => {
+        Command::Pack {
+            src,
+            output,
+            level,
+            password,
+            overwrite,
+            skip_hidden,
+            format,
+        } => {
             if let Some(fmt) = format {
                 let ext = output
                     .extension()
                     .and_then(|s| s.to_str())
                     .map(|s| s.to_ascii_lowercase());
                 if ext.as_deref() != Some(fmt.as_str()) {
-                    eprintln!("错误: --format {fmt} 与输出扩展名 {} 不一致", ext.as_deref().unwrap_or("(无)"));
+                    eprintln!(
+                        "错误: --format {fmt} 与输出扩展名 {} 不一致",
+                        ext.as_deref().unwrap_or("(无)")
+                    );
                     return 2;
                 }
             }
@@ -106,10 +121,19 @@ fn run(cli: Cli) -> i32 {
                     .map_err(anyhow::Error::from)
             })
         }
-        Command::Unpack { archive, output_dir, password, overwrite } => {
+        Command::Unpack {
+            archive,
+            output_dir,
+            password,
+            overwrite,
+        } => {
             let opts = ExtractOptions {
                 password,
-                overwrite: if overwrite { OverwriteMode::Overwrite } else { OverwriteMode::Skip },
+                overwrite: if overwrite {
+                    OverwriteMode::Overwrite
+                } else {
+                    OverwriteMode::Skip
+                },
             };
             run_with_cancel(|cancel| {
                 let sink = CliProgress::new(0);
@@ -117,31 +141,29 @@ fn run(cli: Cli) -> i32 {
                     .map_err(anyhow::Error::from)
             })
         }
-        Command::List { archive } => {
-            match litepack_core::list(&archive) {
-                Ok(entries) => {
-                    if entries.is_empty() {
-                        println!("(空归档)");
-                    }
-                    for e in &entries {
-                        let size = human_size(e.size);
-                        let method = e.method.as_deref().unwrap_or("-");
-                        let name = e.path.trim_end_matches(['/', '\\']);
-                        let lock = if e.encrypted { " 🔒" } else { "" };
-                        if e.is_dir {
-                            println!("{:<8} {:>10}  {}/{}", "目录", size, name, lock);
-                        } else {
-                            println!("{:<8} {:>10}  {}{}", method, size, name, lock);
-                        }
-                    }
-                    0
+        Command::List { archive } => match litepack_core::list(&archive) {
+            Ok(entries) => {
+                if entries.is_empty() {
+                    println!("(空归档)");
                 }
-                Err(e) => {
-                    eprintln!("错误: {e}");
-                    exit_code(&e)
+                for e in &entries {
+                    let size = human_size(e.size);
+                    let method = e.method.as_deref().unwrap_or("-");
+                    let name = e.path.trim_end_matches(['/', '\\']);
+                    let lock = if e.encrypted { " 🔒" } else { "" };
+                    if e.is_dir {
+                        println!("{:<8} {:>10}  {}/{}", "目录", size, name, lock);
+                    } else {
+                        println!("{:<8} {:>10}  {}{}", method, size, name, lock);
+                    }
                 }
+                0
             }
-        }
+            Err(e) => {
+                eprintln!("错误: {e}");
+                exit_code(&e)
+            }
+        },
     }
 }
 
@@ -187,12 +209,14 @@ impl CliProgress {
         if total > 0 {
             let bar = ProgressBar::new(total);
             bar.set_style(
-                ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {percent}% {msg}")
-                    .unwrap()
-                    .with_key("eta", |s: &ProgressState, w: &mut dyn fmt::Write| {
-                        write!(w, "{:.1}s", s.eta().as_secs_f64()).unwrap()
-                    })
-                    .progress_chars("##-"),
+                ProgressStyle::with_template(
+                    "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {percent}% {msg}",
+                )
+                .unwrap()
+                .with_key("eta", |s: &ProgressState, w: &mut dyn fmt::Write| {
+                    write!(w, "{:.1}s", s.eta().as_secs_f64()).unwrap()
+                })
+                .progress_chars("##-"),
             );
             Self {
                 bar: Mutex::new(Some(bar)),

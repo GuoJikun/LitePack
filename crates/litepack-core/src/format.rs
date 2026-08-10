@@ -24,7 +24,9 @@ impl ArchiveFormat {
         match ext.as_deref() {
             Some("zip") => Ok(ArchiveFormat::Zip),
             Some("7z") => Ok(ArchiveFormat::SevenZ),
-            other => Err(Error::UnsupportedFormat(other.unwrap_or("(no extension)").to_string())),
+            other => Err(Error::UnsupportedFormat(
+                other.unwrap_or("(no extension)").to_string(),
+            )),
         }
     }
 }
@@ -32,8 +34,12 @@ impl ArchiveFormat {
 /// 读取文件头魔数识别格式；魔数无法识别时回退到扩展名。
 pub fn detect_format(path: &Path) -> Result<ArchiveFormat> {
     let mut head = [0u8; SEVENZ_MAGIC.len()];
-    let mut file = std::fs::File::open(path)
-        .map_err(|e| Error::Io(std::io::Error::new(e.kind(), format!("open {}: {e}", path.display()))))?;
+    let mut file = std::fs::File::open(path).map_err(|e| {
+        Error::Io(std::io::Error::new(
+            e.kind(),
+            format!("open {}: {e}", path.display()),
+        ))
+    })?;
     use std::io::Read;
     let n = file.read(&mut head)?;
 
@@ -99,6 +105,9 @@ mod tests {
     fn unknown_extension_rejected() {
         let dir = temp_dir();
         let p = write_bytes(&dir, "x.rar", b"data");
-        assert!(matches!(detect_format(&p), Err(Error::UnsupportedFormat(_))));
+        assert!(matches!(
+            detect_format(&p),
+            Err(Error::UnsupportedFormat(_))
+        ));
     }
 }

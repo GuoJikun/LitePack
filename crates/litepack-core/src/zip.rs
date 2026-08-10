@@ -291,8 +291,17 @@ mod tests {
         make_fixture(&src);
 
         let archive = root.join("out.zip");
-        let entries = crate::walk::collect_entries(std::slice::from_ref(&src), &CompressOptions::default()).unwrap();
-        compress(&entries, &archive, &CompressOptions::default(), &NoopSink, &CancelHandle::new()).unwrap();
+        let entries =
+            crate::walk::collect_entries(std::slice::from_ref(&src), &CompressOptions::default())
+                .unwrap();
+        compress(
+            &entries,
+            &archive,
+            &CompressOptions::default(),
+            &NoopSink,
+            &CancelHandle::new(),
+        )
+        .unwrap();
 
         let listed = list(&archive).unwrap();
         let names: Vec<&str> = listed.iter().map(|e| e.path.as_str()).collect();
@@ -307,9 +316,22 @@ mod tests {
         }
 
         let out = root.join("extracted");
-        decompress(&archive, &out, &ExtractOptions::default(), &NoopSink, &CancelHandle::new()).unwrap();
-        assert_eq!(std::fs::read_to_string(out.join("data/a.txt")).unwrap(), "hello world");
-        assert_eq!(std::fs::read(out.join("data/sub/b.txt")).unwrap().len(), 10_000);
+        decompress(
+            &archive,
+            &out,
+            &ExtractOptions::default(),
+            &NoopSink,
+            &CancelHandle::new(),
+        )
+        .unwrap();
+        assert_eq!(
+            std::fs::read_to_string(out.join("data/a.txt")).unwrap(),
+            "hello world"
+        );
+        assert_eq!(
+            std::fs::read(out.join("data/sub/b.txt")).unwrap().len(),
+            10_000
+        );
         assert!(out.join("data/empty_dir").is_dir());
     }
 
@@ -332,18 +354,33 @@ mod tests {
         };
         let out = root.join("ok");
         decompress(&archive, &out, &out_opts, &NoopSink, &CancelHandle::new()).unwrap();
-        assert_eq!(std::fs::read_to_string(out.join("secret.txt")).unwrap(), "top secret");
+        assert_eq!(
+            std::fs::read_to_string(out.join("secret.txt")).unwrap(),
+            "top secret"
+        );
 
         let out2 = root.join("wrong");
         let wrong_opts = ExtractOptions {
             password: Some("nope".into()),
             ..ExtractOptions::default()
         };
-        let r = decompress(&archive, &out2, &wrong_opts, &NoopSink, &CancelHandle::new());
+        let r = decompress(
+            &archive,
+            &out2,
+            &wrong_opts,
+            &NoopSink,
+            &CancelHandle::new(),
+        );
         assert!(matches!(r, Err(Error::BadPassword)));
 
         let out3 = root.join("nopw");
-        let r = decompress(&archive, &out3, &ExtractOptions::default(), &NoopSink, &CancelHandle::new());
+        let r = decompress(
+            &archive,
+            &out3,
+            &ExtractOptions::default(),
+            &NoopSink,
+            &CancelHandle::new(),
+        );
         assert!(matches!(r, Err(Error::Encrypted)));
     }
 
@@ -360,7 +397,13 @@ mod tests {
             w.finish().unwrap();
         }
         let out = root.join("out");
-        let r = decompress(&archive, &out, &ExtractOptions::default(), &NoopSink, &CancelHandle::new());
+        let r = decompress(
+            &archive,
+            &out,
+            &ExtractOptions::default(),
+            &NoopSink,
+            &CancelHandle::new(),
+        );
         assert!(matches!(r, Err(Error::PathTraversal(_))));
     }
 
@@ -389,13 +432,28 @@ mod tests {
         let big = root.join("big.bin");
         std::fs::write(&big, vec![0u8; 64 * 1024]).unwrap();
         let archive = root.join("big.zip");
-        let entries = crate::walk::collect_entries(std::slice::from_ref(&big), &CompressOptions::default()).unwrap();
-        compress(&entries, &archive, &CompressOptions::default(), &NoopSink, &CancelHandle::new()).unwrap();
+        let entries =
+            crate::walk::collect_entries(std::slice::from_ref(&big), &CompressOptions::default())
+                .unwrap();
+        compress(
+            &entries,
+            &archive,
+            &CompressOptions::default(),
+            &NoopSink,
+            &CancelHandle::new(),
+        )
+        .unwrap();
 
         let cancel = CancelHandle::new();
         cancel.cancel();
         let out = root.join("out");
-        let r = decompress(&archive, &out, &ExtractOptions::default(), &NoopSink, &cancel);
+        let r = decompress(
+            &archive,
+            &out,
+            &ExtractOptions::default(),
+            &NoopSink,
+            &cancel,
+        );
         assert!(matches!(r, Err(Error::Cancelled)));
     }
 
@@ -406,7 +464,13 @@ mod tests {
         craft_zip_bomb(&archive, 100_000_000);
         // 声称 100MiB 解压后内容，实际仅 4 字节存储数据，比例远超 10000。
         let out = root.join("out");
-        let r = decompress(&archive, &out, &ExtractOptions::default(), &NoopSink, &CancelHandle::new());
+        let r = decompress(
+            &archive,
+            &out,
+            &ExtractOptions::default(),
+            &NoopSink,
+            &CancelHandle::new(),
+        );
         assert!(matches!(r, Err(Error::ZipBomb)), "{r:?}");
     }
 
@@ -479,7 +543,12 @@ mod tests {
         let py = match py {
             Ok(o) if o.status.success() => "python",
             _ => {
-                if std::process::Command::new("py").arg("--version").output().map(|o| o.status.success()).unwrap_or(false) {
+                if std::process::Command::new("py")
+                    .arg("--version")
+                    .output()
+                    .map(|o| o.status.success())
+                    .unwrap_or(false)
+                {
                     "py"
                 } else {
                     eprintln!("python 不可用，跳过互操作测试");
@@ -508,13 +577,35 @@ with zipfile.ZipFile({archive:?}, "w", zipfile.ZIP_DEFLATED) as z:
         assert!(names.contains(&"dir/中文名.bin"));
 
         let out = root.join("out");
-        decompress(&archive, &out, &ExtractOptions::default(), &NoopSink, &CancelHandle::new()).unwrap();
-        assert_eq!(std::fs::read_to_string(out.join("hello.txt")).unwrap(), "你好 world");
-        assert_eq!(std::fs::read(out.join("dir/中文名.bin")).unwrap().len(), 256);
+        decompress(
+            &archive,
+            &out,
+            &ExtractOptions::default(),
+            &NoopSink,
+            &CancelHandle::new(),
+        )
+        .unwrap();
+        assert_eq!(
+            std::fs::read_to_string(out.join("hello.txt")).unwrap(),
+            "你好 world"
+        );
+        assert_eq!(
+            std::fs::read(out.join("dir/中文名.bin")).unwrap().len(),
+            256
+        );
 
         let back = root.join("back.zip");
-        let entries = crate::walk::collect_entries(std::slice::from_ref(&out), &CompressOptions::default()).unwrap();
-        compress(&entries, &back, &CompressOptions::default(), &NoopSink, &CancelHandle::new()).unwrap();
+        let entries =
+            crate::walk::collect_entries(std::slice::from_ref(&out), &CompressOptions::default())
+                .unwrap();
+        compress(
+            &entries,
+            &back,
+            &CompressOptions::default(),
+            &NoopSink,
+            &CancelHandle::new(),
+        )
+        .unwrap();
         let verify = format!(
             r#"import zipfile, sys
 with zipfile.ZipFile({back:?}) as z:
@@ -527,6 +618,10 @@ print("OK")"#
             .arg(&verify)
             .output()
             .unwrap();
-        assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+        assert!(
+            out.status.success(),
+            "{}",
+            String::from_utf8_lossy(&out.stderr)
+        );
     }
 }

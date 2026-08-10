@@ -11,9 +11,7 @@ mod imp {
     use std::io;
     use std::ptr;
 
-    use windows_sys::Win32::UI::Shell::{
-        SHChangeNotify, SHCNE_ASSOCCHANGED, SHCNF_IDLIST,
-    };
+    use windows_sys::Win32::UI::Shell::{SHChangeNotify, SHCNE_ASSOCCHANGED, SHCNF_IDLIST};
     use winreg::enums::HKEY_CURRENT_USER;
     use winreg::RegKey;
 
@@ -23,9 +21,17 @@ mod imp {
     /// 右键菜单动词定义：(名称, 显示文本, 启动参数标志)
     const VERBS: [(&str, &str, &str); 4] = [
         ("LitePackOpen", "用 LitePack 打开(&O)", "--open"),
-        ("LitePackExtractHere", "解压到当前文件夹(&X)", "--extract-here"),
+        (
+            "LitePackExtractHere",
+            "解压到当前文件夹(&X)",
+            "--extract-here",
+        ),
         ("LitePackExtractTo", "解压到...(&E)...", "--extract-to"),
-        ("LitePackExtractNamed", "解压到同名目录(&N)", "--extract-named"),
+        (
+            "LitePackExtractNamed",
+            "解压到同名目录(&N)",
+            "--extract-named",
+        ),
     ];
 
     fn verb_path(progid: &str, verb_name: &str) -> String {
@@ -77,7 +83,12 @@ mod imp {
     /// 通知 Explorer 文件关联已变化，刷新右键菜单缓存。
     fn notify_shell() {
         unsafe {
-            SHChangeNotify(SHCNE_ASSOCCHANGED as i32, SHCNF_IDLIST, ptr::null(), ptr::null());
+            SHChangeNotify(
+                SHCNE_ASSOCCHANGED as i32,
+                SHCNF_IDLIST,
+                ptr::null(),
+                ptr::null(),
+            );
         }
     }
 
@@ -90,7 +101,8 @@ mod imp {
             let display_str = display.to_string();
             for path in verb_target_paths(verb_name) {
                 let (verb, _) = hkcu.create_subkey(&path).map_err(|e| e.to_string())?;
-                verb.set_value("", &display_str).map_err(|e| e.to_string())?;
+                verb.set_value("", &display_str)
+                    .map_err(|e| e.to_string())?;
                 verb.set_value("Icon", &format!("{},0", exe.display()))
                     .map_err(|e| e.to_string())?;
                 let (cmd_key, _) = verb.create_subkey("command").map_err(|e| e.to_string())?;
@@ -118,7 +130,9 @@ mod imp {
     /// 是否已注册（以目标路径是否存在为准）。
     pub fn is_registered() -> bool {
         let hkcu = RegKey::predef(HKEY_CURRENT_USER);
-        all_target_paths().iter().any(|p| hkcu.open_subkey(p).is_ok())
+        all_target_paths()
+            .iter()
+            .any(|p| hkcu.open_subkey(p).is_ok())
     }
 }
 
@@ -154,7 +168,12 @@ mod tests {
         imp::register().expect("注册应成功");
 
         let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
-        let verbs = ["--open", "--extract-here", "--extract-to", "--extract-named"];
+        let verbs = [
+            "--open",
+            "--extract-here",
+            "--extract-to",
+            "--extract-named",
+        ];
         for path in imp::all_target_paths() {
             let cmd: String = hkcu
                 .open_subkey(format!("{path}\\command"))

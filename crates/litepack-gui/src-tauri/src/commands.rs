@@ -2,8 +2,8 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use litepack_core::{
-    collect_entries, CancelHandle, CompressOptions, EntryInfo, ExtractOptions, OverwriteMode, Phase,
-    ProgressReport, ProgressSink,
+    collect_entries, CancelHandle, CompressOptions, EntryInfo, ExtractOptions, OverwriteMode,
+    Phase, ProgressReport, ProgressSink,
 };
 use serde::Serialize;
 use tauri::ipc::Channel;
@@ -207,7 +207,8 @@ fn validate_target(target: &str, format: &str) -> Result<(), String> {
         .and_then(|s| s.to_str())
         .map(|s| s.to_ascii_lowercase());
     let expected: String = if format.is_empty() {
-        ext.clone().ok_or_else(|| "输出路径缺少扩展名，无法推断格式".to_string())?
+        ext.clone()
+            .ok_or_else(|| "输出路径缺少扩展名，无法推断格式".to_string())?
     } else {
         format.to_string()
     };
@@ -227,7 +228,5 @@ fn validate_target(target: &str, format: &str) -> Result<(), String> {
 #[tauri::command]
 pub(crate) fn normalize_path(path: String) -> String {
     use path_slash::PathExt;
-    std::path::Path::new(&path)
-        .to_slash_lossy()
-        .into_owned()
+    std::path::Path::new(&path).to_slash_lossy().into_owned()
 }
