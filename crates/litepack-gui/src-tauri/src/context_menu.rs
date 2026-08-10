@@ -14,7 +14,7 @@ mod imp {
     use windows_sys::Win32::UI::Shell::{
         SHChangeNotify, SHCNE_ASSOCCHANGED, SHCNF_IDLIST,
     };
-    use winreg::enums::{HKEY_CLASSES_ROOT, HKEY_CURRENT_USER};
+    use winreg::enums::HKEY_CURRENT_USER;
     use winreg::RegKey;
 
     const SHELL_KEY: &str = r"Software\Classes";
@@ -32,53 +32,35 @@ mod imp {
         format!("{SHELL_KEY}\\{progid}\\shell\\{verb_name}")
     }
 
-    /// 解析扩展名的实际 ProgID（通过 HKCR 合并视图读取，HKCU 优先于 HKLM）。
-    /// 扩展名键默认值为空或不存在时，直接以扩展名自身作为 ProgID。
-    fn resolve_progid(ext: &str) -> String {
-        let key = match RegKey::predef(HKEY_CLASSES_ROOT).open_subkey(format!("{SHELL_KEY}\\{ext}")) {
-            Ok(k) => k,
-            Err(_) => return ext.to_string(),
-        };
-        match key.get_value::<String, _>("") {
-            Ok(p) if !p.is_empty() => p,
-            _ => ext.to_string(),
-        }
-    }
-
     /// SystemFileAssociations 路径：与默认程序无关，始终随扩展名生效，
     /// 也是 Win11 下最可靠的注册位置。
     fn sfa_path(ext: &str, verb_name: &str) -> String {
         format!("{SHELL_KEY}\\SystemFileAssociations\\{ext}\\shell\\{verb_name}")
     }
 
-    /// 所有需要注册的路径（去重）。
-    pub fn all_target_paths() -> Vec<String> {
+    /// 某个动词需要注册的路径（去重）。
+    ///
+    /// 仅使用 SystemFileAssociations 与扩展名自身两处：
+    /// - SFA 覆盖已关联默认程序（WinRAR/7-Zip 等）的情况；
+    /// - 扩展名自身覆盖未关联、以扩展名作为 ProgID 的情况。
+    /// 不再写入其他程序的 ProgID 键，避免残留/覆盖风险。
+    fn verb_target_paths(verb_name: &str) -> Vec<String> {
         let mut paths: Vec<String> = Vec::new();
         for ext in EXTS {
-            for (verb_name, _, _) in VERBS {
-                for p in [
-                    sfa_path(ext, verb_name),
-                    verb_path(ext, verb_name),
-                    verb_path(&resolve_progid(ext), verb_name),
-                ] {
-                    if !paths.contains(&p) {
-                        paths.push(p);
-                    }
+            for p in [sfa_path(ext, verb_name), verb_path(ext, verb_name)] {
+                if !paths.contains(&p) {
+                    paths.push(p);
                 }
             }
         }
         paths
     }
 
-    /// 某个动词需要注册的路径。
-    fn verb_target_paths(verb_name: &str) -> Vec<String> {
+    /// 所有需要注册的路径（去重）。
+    pub fn all_target_paths() -> Vec<String> {
         let mut paths: Vec<String> = Vec::new();
-        for ext in EXTS {
-            for p in [
-                sfa_path(ext, verb_name),
-                verb_path(ext, verb_name),
-                verb_path(&resolve_progid(ext), verb_name),
-            ] {
+        for (verb_name, _, _) in VERBS {
+            for p in verb_target_paths(verb_name) {
                 if !paths.contains(&p) {
                     paths.push(p);
                 }
