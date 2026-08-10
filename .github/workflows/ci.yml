@@ -98,9 +98,9 @@ jobs:
         with:
           name: litepack-${{ matrix.platform }}
           path: |
-            crates/litepack-gui/src-tauri/target/release/bundle/**/*.exe
-            crates/litepack-gui/src-tauri/target/release/bundle/**/*.msi
-            crates/litepack-gui/src-tauri/target/release/bundle/**/*.dmg
-            crates/litepack-gui/src-tauri/target/release/bundle/**/*.deb
-            crates/litepack-gui/src-tauri/target/release/bundle/**/*.AppImage
+            target/release/bundle/**/*.exe
+            target/release/bundle/**/*.msi
+            target/release/bundle/**/*.dmg
+            target/release/bundle/**/*.deb
+            target/release/bundle/**/*.AppImage
           if-no-files-found: ignore
