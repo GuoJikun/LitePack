@@ -4,7 +4,8 @@
   "description": "LitePack 主窗口默认权限",
   "windows": [
     "main",
-    "extract"
+    "extract",
+    "extract-password"
   ],
   "permissions": [
     "core:default",
