@@ -205,7 +205,10 @@ pub(crate) fn exit_app(app: tauri::AppHandle) {
 pub(crate) async fn open_extract_password_window(
     app: tauri::AppHandle,
     error_message: String,
+    caller: String,
 ) -> Result<(), String> {
+    use tauri::Manager;
+
     let route = format!(
         "/extract-password?error={}",
         urlencoding::encode(&error_message)
@@ -214,7 +217,7 @@ pub(crate) async fn open_extract_password_window(
     let navigated = Arc::new(std::sync::atomic::AtomicBool::new(false));
     let navigated_clone = navigated.clone();
 
-    let _window = tauri::WebviewWindowBuilder::new(
+    let mut builder = tauri::WebviewWindowBuilder::new(
         &app,
         "extract-password",
         tauri::WebviewUrl::App("index.html".into()),
@@ -222,7 +225,7 @@ pub(crate) async fn open_extract_password_window(
     .title("LitePack - 输入密码")
     .inner_size(400.0, 220.0)
     .resizable(false)
-    .decorations(true)
+    .decorations(false)
     .center()
     .on_page_load(move |window, payload| {
         use tauri::webview::PageLoadEvent;
@@ -234,9 +237,15 @@ pub(crate) async fn open_extract_password_window(
             let _ = window.show();
             let _ = window.set_focus();
         }
-    })
-    .build()
-    .map_err(|e| format!("创建密码窗口失败: {e}"))?;
+    });
+
+    if let Some(parent) = app.get_webview_window(&caller) {
+        builder = builder.parent(&parent).map_err(|e| e.to_string())?;
+    }
+
+    let _window = builder
+        .build()
+        .map_err(|e| format!("创建密码窗口失败: {e}"))?;
 
     Ok(())
 }

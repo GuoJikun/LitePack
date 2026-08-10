@@ -4,6 +4,8 @@ import { useRoute } from "vue-router";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
 const route = useRoute();
+const win = getCurrentWindow();
+
 const errorMessage = computed(() => {
   const raw = route.query.error;
   return typeof raw === "string" ? decodeURIComponent(raw) : "";
@@ -11,18 +13,30 @@ const errorMessage = computed(() => {
 
 function onSubmit(password: string) {
   // 这里先用一个简单的占位：关闭子窗口，后续再接入主窗口回传逻辑。
-  getCurrentWindow().close().catch(() => {});
+  void win.close();
 }
 </script>
 
 <template>
   <div class="password-window">
-    <div class="password-window-title">请输入密码</div>
-    <div v-if="errorMessage" class="password-window-error">{{ errorMessage }}</div>
-    <input class="modal-input" type="password" placeholder="请输入密码" />
-    <div class="modal-actions">
-      <button class="modal-btn" @click="getCurrentWindow().close().catch(() => {})">取消</button>
-      <button class="modal-btn primary" @click="onSubmit('')">解压</button>
+    <div class="password-titlebar">
+      <span class="password-titlebar-text">LitePack - 输入密码</span>
+      <div class="password-titlebar-buttons">
+        <button class="titlebar-btn" @click="win.close()">
+          <svg viewBox="0 0 12 12" width="12" height="12">
+            <line x1="2" y1="2" x2="10" y2="10" stroke="currentColor" stroke-width="1.5" />
+            <line x1="10" y1="2" x2="2" y2="10" stroke="currentColor" stroke-width="1.5" />
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="password-body">
+      <div v-if="errorMessage" class="password-window-error">{{ errorMessage }}</div>
+      <input class="modal-input" type="password" placeholder="请输入密码" />
+      <div class="modal-actions">
+        <button class="modal-btn" @click="win.close()">取消</button>
+        <button class="modal-btn primary" @click="onSubmit('')">解压</button>
+      </div>
     </div>
   </div>
 </template>
@@ -30,18 +44,60 @@ function onSubmit(password: string) {
 <style scoped>
 .password-window {
   height: 100vh;
-  padding: 20px;
-  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   background: var(--surface);
 }
 
-.password-window-title {
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 8px;
+.password-titlebar {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  -webkit-app-region: drag;
+  flex-shrink: 0;
+}
+
+.password-titlebar-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.password-titlebar-buttons {
+  display: flex;
+  gap: 4px;
+  -webkit-app-region: no-drag;
+}
+
+.titlebar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.titlebar-btn:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.password-body {
+  flex: 1;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .password-window-error {

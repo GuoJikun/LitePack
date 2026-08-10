@@ -1,4 +1,5 @@
 import { invoke, Channel } from "@tauri-apps/api/core";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import type {
   ArchiveFormat,
   ChannelEvent,
@@ -87,7 +88,10 @@ export function exitApp(): Promise<void> {
 }
 
 export function openPasswordWindow(errorMessage: string): Promise<void> {
-  return invoke("open_extract_password_window", { errorMessage });
+  return invoke("open_extract_password_window", {
+    errorMessage,
+    caller: getCurrentWindow().label,
+  });
 }
 
 export function normalizePath(path: string): Promise<string> {
