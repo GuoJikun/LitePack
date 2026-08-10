@@ -77,9 +77,10 @@ function dispatchEvent(e: ChannelEvent) {
     store.updateProgress(e.data);
   } else if (e.type === "Done") {
     store.finishTask(e.data.id, true);
+    pendingTarget = undefined;
     showToast("解压完成");
   } else if (e.type === "Error") {
-    const isPw = /密码|password/i.test(e.data.message);
+    const isPw = /密码|password|加密/i.test(e.data.message);
     if (isPw && pendingTarget) {
       store.clearTaskError();
       passwordFor.value = "extract";
@@ -87,7 +88,9 @@ function dispatchEvent(e: ChannelEvent) {
       showPassword.value = true;
     } else {
       store.finishTask(e.data.id, false, e.data.message);
+      pendingTarget = undefined;
       showToast(e.data.message);
+      store.clearTask();
     }
   }
 }
@@ -156,7 +159,6 @@ function onPasswordSubmit(pw: string) {
     return;
   }
   const t = pendingTarget;
-  pendingTarget = undefined;
   if (t) {
     void runExtract(t, pw || undefined);
   }

@@ -1,29 +1,21 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
+import { useExtractFlow } from "../composables/useExtractFlow";
 import { useAppStore } from "../stores/app";
-import { extractArchive, createProgressChannel, exitApp } from "../api/tauri";
-import type { ChannelEvent } from "../types";
 import ExtractDialog from "../components/ExtractDialog.vue";
 import MiniProgress from "../components/MiniProgress.vue";
+import PasswordDialog from "../components/PasswordDialog.vue";
 
-const route = useRoute();
 const store = useAppStore();
+const route = useRoute();
 const archivePath = route.query.path as string;
 const phase = ref<"dialog" | "progress">("dialog");
 const defaultDir = ref(".");
 const archiveName = ref("");
 
-function handleEvent(e: ChannelEvent) {
-  if (e.type === "Progress") {
-    store.updateProgress(e.data);
-  } else if (e.type === "Done") {
-    store.finishTask(e.data.id, true);
-    void exitApp();
-  } else if (e.type === "Error") {
-    store.finishTask(e.data.id, false, e.data.message);
-  }
-}
+const { showPassword, passwordError, runExtract, onPasswordSubmit, onPasswordCancel, onCancel } =
+  useExtractFlow(archivePath);
 
 onMounted(() => {
   const idx = Math.max(
@@ -34,24 +26,13 @@ onMounted(() => {
   archiveName.value = archivePath.split(/[\\/]/).pop() ?? archivePath;
 });
 
-async function handleSubmit(dir: string) {
+function onDialogSubmit(dir: string) {
   phase.value = "progress";
-  const progress = createProgressChannel(handleEvent);
-  try {
-    const id = await extractArchive({
-      archive: archivePath,
-      outDir: dir,
-      overwrite: false,
-      progress,
-    });
-    store.startTask(id, "extract");
-  } catch {
-    void exitApp();
-  }
+  void runExtract(dir);
 }
 
 function handleCancel() {
-  void exitApp();
+  void onCancel();
 }
 </script>
 
@@ -60,7 +41,7 @@ function handleCancel() {
     v-if="phase === 'dialog'"
     :archive-name="archiveName"
     :default-dir="defaultDir"
-    @submit="handleSubmit"
+    @submit="onDialogSubmit"
     @cancel="handleCancel"
   />
 
@@ -68,6 +49,13 @@ function handleCancel() {
     v-if="phase === 'progress'"
     :progress="store.task?.report ?? null"
     :error="store.task?.error ?? undefined"
-    @cancel="handleCancel"
+    @cancel="onCancel"
+  />
+
+  <PasswordDialog
+    v-if="showPassword"
+    :error="passwordError || undefined"
+    @submit="onPasswordSubmit"
+    @cancel="onPasswordCancel"
   />
 </template>

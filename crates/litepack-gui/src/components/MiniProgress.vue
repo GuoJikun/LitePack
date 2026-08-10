@@ -37,7 +37,7 @@ function formatBytes(bytes: number): string {
         {{ error ? "解压失败" : "解压中..." }}
       </span>
       <div class="mini-progress-buttons">
-        <button class="titlebar-btn" @click="emit('cancel')" :disabled="!!error">
+        <button class="titlebar-btn" @click="emit('cancel')">
           <svg viewBox="0 0 12 12" width="12" height="12">
             <line x1="2" y1="2" x2="10" y2="10" stroke="currentColor" stroke-width="1.5" />
             <line x1="10" y1="2" x2="2" y2="10" stroke="currentColor" stroke-width="1.5" />

@@ -153,5 +153,8 @@ export const useAppStore = defineStore("app", {
     clearTaskError() {
       if (this.task) this.task.error = undefined;
     },
+    clearTask() {
+      this.task = null;
+    },
   },
 });
