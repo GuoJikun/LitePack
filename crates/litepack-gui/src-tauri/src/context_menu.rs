@@ -43,6 +43,7 @@ mod imp {
     /// 仅使用 SystemFileAssociations 与扩展名自身两处：
     /// - SFA 覆盖已关联默认程序（WinRAR/7-Zip 等）的情况；
     /// - 扩展名自身覆盖未关联、以扩展名作为 ProgID 的情况。
+    ///
     /// 不再写入其他程序的 ProgID 键，避免残留/覆盖风险。
     fn verb_target_paths(verb_name: &str) -> Vec<String> {
         let mut paths: Vec<String> = Vec::new();
