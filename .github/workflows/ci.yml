@@ -95,15 +95,16 @@ jobs:
         run: cargo tauri build ${{ matrix.args }}
         working-directory: crates/litepack-gui
       - name: Upload artifacts
+        if: matrix.platform != 'ubuntu-22.04'
         uses: actions/upload-artifact@v4
         with:
           name: litepack-${{ matrix.platform }}
           path: |
-            target/release/bundle/**/*.exe
-            target/release/bundle/**/*.msi
-            target/release/bundle/**/*.dmg
-            target/release/bundle/**/*.deb
-            target/release/bundle/**/*.AppImage
+            target/**/bundle/**/*.exe
+            target/**/bundle/**/*.msi
+            target/**/bundle/**/*.dmg
+            target/**/bundle/**/*.deb
+            target/**/bundle/**/*.AppImage
           if-no-files-found: ignore
 
   release:
