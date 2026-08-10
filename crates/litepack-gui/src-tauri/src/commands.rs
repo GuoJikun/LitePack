@@ -223,7 +223,7 @@ pub(crate) async fn open_extract_password_window(
         tauri::WebviewUrl::App("index.html".into()),
     )
     .title("LitePack - 输入密码")
-    .inner_size(380.0, 180.0)
+    .inner_size(380.0, 160.0)
     .resizable(false)
     .decorations(false)
     .center()
