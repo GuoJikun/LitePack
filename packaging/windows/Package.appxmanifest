@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
+  xmlns:desktop4="http://schemas.microsoft.com/appx/manifest/desktop/windows10/4"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap com desktop4 rescap">
+
+  <Identity
+    Name="LitePack"
+    Publisher="CN=LitePack"
+    Version="0.1.0.0"
+    ProcessorArchitecture="x64" />
+
+  <Properties>
+    <DisplayName>LitePack</DisplayName>
+    <PublisherDisplayName>LitePack</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily
+      Name="Windows.Desktop"
+      MinVersion="10.0.17763.0"
+      MaxVersionTested="10.0.22621.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="en-us" />
+    <Resource Language="zh-cn" />
+  </Resources>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+
+  <Applications>
+    <Application
+      Id="LitePack"
+      Executable="LitePack.exe"
+      EntryPoint="Windows.FullTrustApplication">
+
+      <uap:VisualElements
+        DisplayName="LitePack"
+        Description="轻量级压缩/解压工具"
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png" />
+
+      <Extensions>
+        <!-- COM Server: 声明 IExplorerCommand DLL -->
+        <com:Extension Category="windows.comServer">
+          <com:ComServer>
+            <com:SurrogateServer
+              Id="LitePackShell"
+              DisplayName="LitePack Shell Extension">
+              <com:Class
+                Id="{7B2E4A1F-9C3D-4E5F-A6B7-C8D9E0F1A2B3}"
+                Path="litepack_shell.dll"
+                ThreadingModel="Both" />
+            </com:SurrogateServer>
+          </com:ComServer>
+        </com:Extension>
+
+        <!-- Win11 一级右键菜单 -->
+        <desktop4:Extension Category="windows.fileExplorerContextMenus">
+          <desktop4:FileExplorerContextMenus>
+            <desktop4:ItemType Type=".zip">
+              <desktop4:Verb
+                Id="LitePackMenu"
+                Clsid="{7B2E4A1F-9C3D-4E5F-A6B7-C8D9E0F1A2B3}" />
+            </desktop4:ItemType>
+            <desktop4:ItemType Type=".7z">
+              <desktop4:Verb
+                Id="LitePackMenu"
+                Clsid="{7B2E4A1F-9C3D-4E5F-A6B7-C8D9E0F1A2B3}" />
+            </desktop4:ItemType>
+          </desktop4:FileExplorerContextMenus>
+        </desktop4:Extension>
+
+        <!-- 文件类型关联：双击 .zip/.7z 用 LitePack 打开 -->
+        <uap:Extension Category="windows.fileTypeAssociation">
+          <uap:FileTypeAssociation Name="litepack.archive">
+            <uap:SupportedFileTypes>
+              <uap:FileType>.zip</uap:FileType>
+              <uap:FileType>.7z</uap:FileType>
+            </uap:SupportedFileTypes>
+            <uap:DisplayName>LitePack Archive</uap:DisplayName>
+          </uap:FileTypeAssociation>
+        </uap:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+</Package>

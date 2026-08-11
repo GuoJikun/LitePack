@@ -4,6 +4,7 @@ members = [
     "crates/litepack-core",
     "crates/litepack-cli",
     "crates/litepack-gui/src-tauri",
+    "crates/litepack-shell",
 ]
 
 [workspace.package]
