@@ -157,8 +157,10 @@ pub fn run() {
                     150.0,
                     false,
                 );
+            } else if action.action == PendingActionType::Open {
+                create_window_with_route(app, "main", "LitePack", &route, 800.0, 580.0, true);
             } else {
-                create_window_with_route(app, "main", "LitePack", &route, 960.0, 700.0, true);
+                create_window_with_route(app, "main", "LitePack", &route, 480.0, 240.0, true);
             }
         } else {
             create_window_with_route(app, "main", "LitePack", "/", 960.0, 700.0, true);

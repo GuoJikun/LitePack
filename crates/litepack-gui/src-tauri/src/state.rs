@@ -12,7 +12,7 @@ pub struct OperationRegistry {
 }
 
 /// 待处理的右键菜单操作类型。
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, PartialEq, Eq)]
 #[serde(tag = "type")]
 pub enum PendingActionType {
     /// 打开/浏览归档

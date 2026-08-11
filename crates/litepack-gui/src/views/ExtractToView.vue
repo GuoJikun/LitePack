@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref } from "vue";
 import { useRoute } from "vue-router";
 import { useExtractFlow } from "../composables/useExtractFlow";
 import { useAppStore } from "../stores/app";
@@ -10,19 +10,16 @@ const store = useAppStore();
 const route = useRoute();
 const archivePath = route.query.path as string;
 const phase = ref<"dialog" | "progress">("dialog");
-const defaultDir = ref(".");
-const archiveName = ref("");
+
+// 同步计算，确保首次渲染即为正确值（onMounted 会导致子组件 ref 拿到初始 "."）
+const idx = Math.max(
+  archivePath.lastIndexOf("/"),
+  archivePath.lastIndexOf("\\"),
+);
+const defaultDir = idx > 0 ? archivePath.slice(0, idx) : ".";
+const archiveName = archivePath.split(/[\\/]/).pop() ?? archivePath;
 
 const { runExtract, onCancel } = useExtractFlow(archivePath);
-
-onMounted(() => {
-  const idx = Math.max(
-    archivePath.lastIndexOf("/"),
-    archivePath.lastIndexOf("\\"),
-  );
-  defaultDir.value = idx > 0 ? archivePath.slice(0, idx) : ".";
-  archiveName.value = archivePath.split(/[\\/]/).pop() ?? archivePath;
-});
 
 function onDialogSubmit(dir: string) {
   phase.value = "progress";
