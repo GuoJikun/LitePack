@@ -2071,6 +2071,7 @@ dependencies = [
 name = "litepack-gui"
 version = "0.1.0"
 dependencies = [
+ "litepack-cli",
  "litepack-core",
  "log",
  "parking_lot",

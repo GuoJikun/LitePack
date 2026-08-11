@@ -5,6 +5,9 @@ edition.workspace = true
 license.workspace = true
 description = "LitePack 命令行工具（ZIP / 7z）"
 
+[lib]
+name = "litepack_cli"
+
 [[bin]]
 name = "litepack"
 path = "src/main.rs"

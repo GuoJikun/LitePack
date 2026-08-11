@@ -16,6 +16,7 @@ tauri-build = { version = "2.6.3", features = [] }
 
 [dependencies]
 litepack-core = { path = "../../litepack-core" }
+litepack-cli = { path = "../../litepack-cli" }
 serde_json.workspace = true
 serde.workspace = true
 thiserror.workspace = true
@@ -30,4 +31,4 @@ urlencoding.workspace = true
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.55.0"
-windows-sys = { version = "0.60.0", features = ["Win32_UI_Shell"] }
+windows-sys = { version = "0.60.0", features = ["Win32_UI_Shell", "Win32_System_Console"] }
