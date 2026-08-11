@@ -50,7 +50,7 @@ unsafe extern "system" fn DllGetClassObject(
 
     // 只响应我们自己的 CLSID
     if rclsid.is_null() || !(*rclsid).eq(&CLSID_LITEPACKSHELL) {
-        return E_FAIL; // CLASS_E_CLASSNOTAVAILABLE
+        return 0x8004_0111u32 as i32; // CLASS_E_CLASSNOTAVAILABLE
     }
 
     // 只支持 IClassFactory / IUnknown
