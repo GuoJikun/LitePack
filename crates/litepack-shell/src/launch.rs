@@ -31,8 +31,12 @@ pub struct IShellItemArrayVtbl {
     ) -> HRESULT,
     pub GetPropertyStore:
         unsafe extern "system" fn(*mut c_void, i32, *const GUID, *mut *mut c_void) -> HRESULT,
-    pub GetPropertyDescriptionList:
-        unsafe extern "system" fn(*mut c_void, *const c_void, *const GUID, *mut *mut c_void) -> HRESULT,
+    pub GetPropertyDescriptionList: unsafe extern "system" fn(
+        *mut c_void,
+        *const c_void,
+        *const GUID,
+        *mut *mut c_void,
+    ) -> HRESULT,
     pub GetAttributes: unsafe extern "system" fn(*mut c_void, u32, u32, *mut u32) -> HRESULT,
     pub GetCount: unsafe extern "system" fn(*mut c_void, *mut u32) -> HRESULT,
     pub GetAt: unsafe extern "system" fn(*mut c_void, u32, *mut *mut c_void) -> HRESULT,

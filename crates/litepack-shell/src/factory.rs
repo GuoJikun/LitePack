@@ -14,8 +14,12 @@ pub struct IClassFactoryVtbl {
         unsafe extern "system" fn(*mut c_void, *const GUID, *mut *mut c_void) -> HRESULT,
     pub AddRef: unsafe extern "system" fn(*mut c_void) -> u32,
     pub Release: unsafe extern "system" fn(*mut c_void) -> u32,
-    pub CreateInstance:
-        unsafe extern "system" fn(*mut c_void, *mut c_void, *const GUID, *mut *mut c_void) -> HRESULT,
+    pub CreateInstance: unsafe extern "system" fn(
+        *mut c_void,
+        *mut c_void,
+        *const GUID,
+        *mut *mut c_void,
+    ) -> HRESULT,
     pub LockServer: unsafe extern "system" fn(*mut c_void, i32) -> HRESULT,
 }
 
@@ -114,10 +118,7 @@ unsafe extern "system" fn class_factory_create_instance(
     S_OK
 }
 
-unsafe extern "system" fn class_factory_lock_server(
-    _this: *mut c_void,
-    f_lock: i32,
-) -> HRESULT {
+unsafe extern "system" fn class_factory_lock_server(_this: *mut c_void, f_lock: i32) -> HRESULT {
     if f_lock != 0 {
         FACTORY_REFCOUNT.fetch_add(1, Ordering::SeqCst);
     } else {

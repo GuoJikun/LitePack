@@ -24,11 +24,7 @@ use guid::*;
 const DLL_PROCESS_ATTACH: u32 = 1;
 
 #[no_mangle]
-unsafe extern "system" fn DllMain(
-    hinst: *mut c_void,
-    reason: u32,
-    _reserved: *mut c_void,
-) -> i32 {
+unsafe extern "system" fn DllMain(hinst: *mut c_void, reason: u32, _reserved: *mut c_void) -> i32 {
     if reason == DLL_PROCESS_ATTACH {
         launch::set_module_handle(hinst as usize);
     }
