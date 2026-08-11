@@ -97,10 +97,11 @@ unsafe extern "system" fn class_factory_create_instance(
     if ppv.is_null() {
         return E_POINTER;
     }
+    *ppv = std::ptr::null_mut();
 
     // 不支持聚合
     if !p_unk_outer.is_null() {
-        return E_FAIL; // CLASS_E_NOAGGREGATION = 0x80040110
+        return 0x8004_0110u32 as i32; // CLASS_E_NOAGGREGATION
     }
 
     // 只支持创建 IExplorerCommand
