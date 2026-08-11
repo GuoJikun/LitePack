@@ -147,11 +147,12 @@ if ($Sign) {
         if (-not (Test-Path $CertPath)) {
             Write-Host "  Creating self-signed certificate..."
             $Cert = New-SelfSignedCertificate -Type Custom -Subject "CN=LitePack" -KeyUsage DigitalSignature -FriendlyName "LitePack Dev" -CertStoreLocation "Cert:\CurrentUser\My" -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}")
-            $Password = ConvertTo-SecureString -String "litepack" -Force -AsPlainText
+            $PfxPasswordPlain = $env:LITEPACK_PFX_PASSWORD
+            if (-not $PfxPasswordPlain) { $PfxPasswordPlain = "litepack" }
+            $Password = ConvertTo-SecureString -String $PfxPasswordPlain -Force -AsPlainText
             Export-PfxCertificate -cert "Cert:\CurrentUser\My\$($Cert.Thumbprint)" -FilePath $CertPath -Password $Password | Out-Null
-        }
 
-        & $SignTool.FullName sign /fd SHA256 /a /f $CertPath /p "litepack" $MsixPath
+        & $SignTool.FullName sign /fd SHA256 /a /f $CertPath /p $PfxPasswordPlain $MsixPath
         if ($LASTEXITCODE -ne 0) {
             Write-Host "WARNING: Signing failed" -ForegroundColor Yellow
         } else {
