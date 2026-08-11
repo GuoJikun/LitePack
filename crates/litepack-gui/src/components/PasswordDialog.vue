@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 
 const props = defineProps<{
   error?: string;
@@ -12,10 +11,6 @@ const emit = defineEmits<{
 }>();
 
 const password = ref("");
-
-function closeWindow() {
-  getCurrentWindow().close().catch(() => {});
-}
 </script>
 
 <template>
@@ -32,8 +27,8 @@ function closeWindow() {
         autofocus
       />
       <div class="modal-actions">
-        <button class="modal-btn" @click="emit('cancel'); closeWindow()">取消</button>
-        <button class="modal-btn primary" @click="emit('submit', password); closeWindow()">解压</button>
+        <button class="modal-btn" @click="emit('cancel')">取消</button>
+        <button class="modal-btn primary" @click="emit('submit', password)">解压</button>
       </div>
     </div>
   </div>
