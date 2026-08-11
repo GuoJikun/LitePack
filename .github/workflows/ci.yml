@@ -94,6 +94,8 @@ jobs:
       - name: Build (bundle)
         run: cargo tauri build ${{ matrix.args }}
         working-directory: crates/litepack-gui
+      - name: Build CLI binary
+        run: cargo build --release -p litepack-cli
       - name: Upload Windows NSIS installer
         if: matrix.platform == 'windows-latest'
         uses: actions/upload-artifact@v7
@@ -133,6 +135,30 @@ jobs:
           path: target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
           if-no-files-found: ignore
           archive: false
+
+      - name: Upload Windows CLI binary
+        if: matrix.platform == 'windows-latest'
+        uses: actions/upload-artifact@v7
+        with:
+          name: litepack-cli-windows-x64
+          path: target/release/litepack.exe
+          if-no-files-found: ignore
+
+      - name: Upload Linux CLI binary
+        if: matrix.platform == 'ubuntu-22.04'
+        uses: actions/upload-artifact@v7
+        with:
+          name: litepack-cli-linux-x64
+          path: target/release/litepack
+          if-no-files-found: ignore
+
+      - name: Upload macOS CLI binary
+        if: matrix.platform == 'macos-latest'
+        uses: actions/upload-artifact@v7
+        with:
+          name: litepack-cli-macos-aarch64
+          path: target/release/litepack
+          if-no-files-found: ignore
 
   release:
     name: Publish GitHub Release

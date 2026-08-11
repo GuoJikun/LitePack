@@ -75,7 +75,14 @@ pub fn is_cli_subcommand() -> bool {
         .nth(1)
         .map(|a| {
             let a = a.to_ascii_lowercase();
-            a == "pack" || a == "unpack" || a == "list" || a == "help" || a == "-h" || a == "--help" || a == "-V" || a == "--version"
+            a == "pack"
+                || a == "unpack"
+                || a == "list"
+                || a == "help"
+                || a == "-h"
+                || a == "--help"
+                || a == "-V"
+                || a == "--version"
         })
         .unwrap_or(false)
 }
