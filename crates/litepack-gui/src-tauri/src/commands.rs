@@ -9,8 +9,8 @@ use serde::Serialize;
 use tauri::ipc::Channel;
 use tauri::State;
 
-use crate::{context_menu, navigate_to};
 use crate::state::{OperationRegistry, PendingAction, PendingActionState};
+use crate::{context_menu, navigate_to};
 
 /// 通过 Channel 推送的事件：进度 / 完成 / 出错。
 #[derive(Clone, Debug, Serialize)]
